@@ -8,3 +8,5 @@ This is a project intended for the matter of power eletronics and microprocessed
 - Be capable of measuring the voltage and current rms;
 - Contains an interface to allow the user change the settings;
 - Use RTOS on the ARM, with the least of 3 tasks.
+
+**To Do:**
