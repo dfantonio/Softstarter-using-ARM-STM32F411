@@ -10,3 +10,8 @@ This is a project intended for the matter of power eletronics and microprocessed
 - Use RTOS on the ARM, with the least of 3 tasks.
 
 **To Do:**
+- [x] Build the zero crossing detector
+- [X] Implement the triggering to triac circuit
+- [X] Be able to vary the ramps time
+- [ ] Bypass relay
+- [ ] measure current throught a current transformer
