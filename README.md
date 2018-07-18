@@ -14,4 +14,6 @@ This is a project intended for the matter of power eletronics and microprocessed
 - [X] Implement the triggering to triac circuit
 - [X] Be able to vary the ramps time
 - [ ] Bypass relay
+- [ ] Eletrical break
+- [ ] Schematic
 - [ ] measure current throught a current transformer
