@@ -13,7 +13,8 @@ This is a project intended for the matter of power eletronics and microprocessed
 - [x] Build the zero crossing detector
 - [X] Implement the triggering to triac circuit
 - [X] Be able to vary the ramps time
-- [ ] Bypass relay
+- [X] Bypass relay
 - [ ] Eletrical break
+- [ ] Measure RPM
 - [ ] Schematic
 - [ ] measure current throught a current transformer
