@@ -1,5 +1,3 @@
-BKP de antes de gerar o novo código no cube com o relé de bypass
-
 /**
  ******************************************************************************
  * @file           : main.c
@@ -57,8 +55,13 @@ BKP de antes de gerar o novo código no cube com o relé de bypass
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
+
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart2;
 
@@ -66,6 +69,9 @@ osThreadId RampHandle;
 osThreadId VerifyHandle;
 osThreadId CounterHandle;
 osThreadId SerialHandle;
+osThreadId OverCurrentHandle;
+osThreadId ComecaHandle;
+osThreadId RPMHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -75,45 +81,76 @@ osThreadId SerialHandle;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_TIM3_Init(void);
+static void MX_TIM4_Init(void);
 void RampTask(void const * argument);
 void VerifyTask(void const * argument);
 void CounterTask(void const * argument);
 void SerialTask(void const * argument);
+void OverCurrentTask(void const * argument);
+void Comeca_Task(void const * argument);
+void RPMTask(void const * argument);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+//! If it's on the soft is in a ramp
 char fg_Start = 0;
-char fg_End = 1;
 
+//! Shows if the soft is idle
+char fg_End = 1;
+char fg_ADC_current = 0;
+
+//! Is the acceleration time
 int tempo_up = 10000; //Tem que ser em ms e será substituido pelo valor recebido pela serial.
+
+//! Deceleration time
 int tempo_down = 7000; //Tem que ser em ms e será substituido pelo valor recebido pela serial.
+
+//! time to the counter
 float tempo; //Tem que ser em ms e será substituido pelo valor recebido pela serial.
 
+//! Delay to the pulse on triac
 int PULSE_DELAY = 8330;	//Tempo em us
-int PULSE_WIDTH = 10;	//Tempo em us
+
+//! Width of the triac's pulse
+int PULSE_WIDTH = 1;	//Tempo em us
 int PULSE_WIDTH_CONST = 1000;	//Tempo em us
+
+//Minimal delay time to triac
 int minimal_delay = 500;
 
 float delay;
 
-int RampUp = 1;	//!Defines if it's a rising or lowering ramp
+//! Defines if it's a acceleration or deceleration ramp
+int RampUp = 1;
+
+//! Is the RPM of the motor
+int RPM;
+
 int counter;
+
+int Irms;
+uint16_t adc_current[16];
 
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+	fg_ADC_current = 1;
+}
 /* USER CODE END 0 */
 
 /**
  * @brief  The application entry point.
  *
- * @r
- * etval None
+ * @retval None
  */
 int main(void) {
 	/* USER CODE BEGIN 1 */
@@ -138,20 +175,15 @@ int main(void) {
 
 	/* Initialize all configured peripherals */
 	MX_GPIO_Init();
+	MX_DMA_Init();
 	MX_USART2_UART_Init();
 	MX_TIM2_Init();
 	MX_TIM1_Init();
+	MX_ADC1_Init();
+	MX_TIM3_Init();
+	MX_TIM4_Init();
 	/* USER CODE BEGIN 2 */
-	tempo = tempo_up;
-	counter = tempo;
 
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-	//HAL_TIM_Base_Start(&htim1);
-
-	__HAL_TIM_SET_AUTORELOAD(&htim2, PULSE_DELAY + PULSE_WIDTH - 1);
-	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PULSE_DELAY);
-
-	__HAL_TIM_SET_AUTORELOAD(&htim1, tempo); //Define o valor do ARR do timer com base no tempo de subida
 	/* USER CODE END 2 */
 
 	/* USER CODE BEGIN RTOS_MUTEX */
@@ -182,6 +214,18 @@ int main(void) {
 	/* definition and creation of Serial */
 	osThreadDef(Serial, SerialTask, osPriorityNormal, 0, 128);
 	SerialHandle = osThreadCreate(osThread(Serial), NULL);
+
+	/* definition and creation of OverCurrent */
+	osThreadDef(OverCurrent, OverCurrentTask, osPriorityNormal, 0, 128);
+	OverCurrentHandle = osThreadCreate(osThread(OverCurrent), NULL);
+
+	/* definition and creation of Comeca */
+	osThreadDef(Comeca, Comeca_Task, osPriorityRealtime, 0, 128);
+	ComecaHandle = osThreadCreate(osThread(Comeca), NULL);
+
+	/* definition and creation of RPM */
+	osThreadDef(RPM, RPMTask, osPriorityNormal, 0, 128);
+	RPMHandle = osThreadCreate(osThread(RPM), NULL);
 
 	/* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -265,6 +309,40 @@ void SystemClock_Config(void) {
 	HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0);
 }
 
+/* ADC1 init function */
+static void MX_ADC1_Init(void) {
+
+	ADC_ChannelConfTypeDef sConfig;
+
+	/**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+	 */
+	hadc1.Instance = ADC1;
+	hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+	hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+	hadc1.Init.ScanConvMode = DISABLE;
+	hadc1.Init.ContinuousConvMode = DISABLE;
+	hadc1.Init.DiscontinuousConvMode = DISABLE;
+	hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
+	hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T3_TRGO;
+	hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+	hadc1.Init.NbrOfConversion = 1;
+	hadc1.Init.DMAContinuousRequests = ENABLE;
+	hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+	if (HAL_ADC_Init(&hadc1) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	/**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+	 */
+	sConfig.Channel = ADC_CHANNEL_4;
+	sConfig.Rank = 1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+}
+
 /* TIM1 init function */
 static void MX_TIM1_Init(void) {
 
@@ -274,8 +352,8 @@ static void MX_TIM1_Init(void) {
 	htim1.Instance = TIM1;
 	htim1.Init.Prescaler = 41999;
 	htim1.Init.CounterMode = TIM_COUNTERMODE_DOWN;
-	htim1.Init.Period = 9999;
-	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim1.Init.Period = 9;
+	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV2;
 	htim1.Init.RepetitionCounter = 0;
 	if (HAL_TIM_Base_Init(&htim1) != HAL_OK) {
 		_Error_Handler(__FILE__, __LINE__);
@@ -306,7 +384,7 @@ static void MX_TIM2_Init(void) {
 	htim2.Instance = TIM2;
 	htim2.Init.Prescaler = 83;
 	htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim2.Init.Period = 9999;
+	htim2.Init.Period = 8333;
 	htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
 		_Error_Handler(__FILE__, __LINE__);
@@ -353,6 +431,67 @@ static void MX_TIM2_Init(void) {
 
 }
 
+/* TIM3 init function */
+static void MX_TIM3_Init(void) {
+
+	TIM_ClockConfigTypeDef sClockSourceConfig;
+	TIM_MasterConfigTypeDef sMasterConfig;
+
+	htim3.Instance = TIM3;
+	htim3.Init.Prescaler = 83;
+	htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim3.Init.Period = 520;
+	htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+	if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+	if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig)
+			!= HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+}
+
+/* TIM4 init function */
+static void MX_TIM4_Init(void) {
+
+	TIM_SlaveConfigTypeDef sSlaveConfig;
+	TIM_MasterConfigTypeDef sMasterConfig;
+
+	htim4.Instance = TIM4;
+	htim4.Init.Prescaler = 0;
+	htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim4.Init.Period = 999;
+	htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	if (HAL_TIM_Base_Init(&htim4) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	sSlaveConfig.SlaveMode = TIM_SLAVEMODE_EXTERNAL1;
+	sSlaveConfig.InputTrigger = TIM_TS_TI1FP1;
+	sSlaveConfig.TriggerPolarity = TIM_TRIGGERPOLARITY_RISING;
+	sSlaveConfig.TriggerFilter = 0;
+	if (HAL_TIM_SlaveConfigSynchronization(&htim4, &sSlaveConfig) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+	if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig)
+			!= HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+}
+
 /* USART2 init function */
 static void MX_USART2_UART_Init(void) {
 
@@ -367,6 +506,21 @@ static void MX_USART2_UART_Init(void) {
 	if (HAL_UART_Init(&huart2) != HAL_OK) {
 		_Error_Handler(__FILE__, __LINE__);
 	}
+
+}
+
+/** 
+ * Enable DMA controller clock
+ */
+static void MX_DMA_Init(void) {
+	/* DMA controller clock enable */
+	__HAL_RCC_DMA2_CLK_ENABLE()
+	;
+
+	/* DMA interrupt init */
+	/* DMA2_Stream0_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 5, 0);
+	HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 
 }
 
@@ -386,8 +540,11 @@ static void MX_GPIO_Init(void) {
 	;
 	__HAL_RCC_GPIOA_CLK_ENABLE()
 	;
+	__HAL_RCC_GPIOB_CLK_ENABLE()
+	;
 
 	/*Configure GPIO pin Output Level */
+	HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin, GPIO_PIN_RESET);
 
 	/*Configure GPIO pin : Button_Pin */
 	GPIO_InitStruct.Pin = Button_Pin;
@@ -401,7 +558,12 @@ static void MX_GPIO_Init(void) {
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 
-	/*Configure GPIO pin : Saida_Pin */
+	/*Configure GPIO pin : bypass_relay_Pin */
+	GPIO_InitStruct.Pin = bypass_relay_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(bypass_relay_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -416,9 +578,7 @@ void RampTask(void const * argument) {
 	/* Infinite loop */
 	for (;;) {
 		if (__HAL_TIM_GET_COUNTER(&htim2) <= (PULSE_DELAY - 500)) {
-			//__HAL_TIM_SET_COUNTER(&htim2,0);
 			__HAL_TIM_SET_AUTORELOAD(&htim2, PULSE_DELAY + PULSE_WIDTH - 1);
-			//if(__HAL_TIM_GET_COUNTER(&htim2)>=8000)PULSE
 			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PULSE_DELAY);
 
 		}
@@ -431,6 +591,7 @@ void RampTask(void const * argument) {
 void VerifyTask(void const * argument) {
 	/* USER CODE BEGIN VerifyTask */
 	/* Infinite loop */
+
 	for (;;) {
 		if (HAL_GPIO_ReadPin(Button_GPIO_Port, Button_Pin) == GPIO_PIN_RESET
 				&& fg_End == 1) {
@@ -440,6 +601,8 @@ void VerifyTask(void const * argument) {
 				tempo = tempo_up;
 				counter = tempo;
 			} else {
+				HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin,
+						GPIO_PIN_RESET);
 				tempo = tempo_down;
 				counter = 0;
 			}
@@ -456,11 +619,16 @@ void CounterTask(void const * argument) {
 	/* Infinite loop */
 	for (;;) {
 
+		//Verifies if acceleration ramp is over
 		if (RampUp == 1 && counter <= 0) {
+			HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin,
+					GPIO_PIN_SET);
 			fg_Start = 0;
 			fg_End = 1;
 			RampUp = !RampUp;
 		}
+
+		//Verifies if deceleration ramp is over
 		if (RampUp == 0 && counter >= tempo) {
 			fg_Start = 0;
 			fg_End = 1;
@@ -483,9 +651,9 @@ void CounterTask(void const * argument) {
 		if ((PULSE_WIDTH < PULSE_WIDTH_CONST && RampUp == 1))
 			PULSE_WIDTH = (8333 - PULSE_DELAY);
 
-		/* USER CODE END CounterTask */
 		osDelay(2);
 	}
+	/* USER CODE END CounterTask */
 }
 
 /* SerialTask function */
@@ -494,15 +662,16 @@ void SerialTask(void const * argument) {
 	/* Infinite loop */
 	char rx, tempo_serial[4];
 	char texto[100];
-	int fg_status = 1;
-	int size;
+	int fg_status = 0;
+	int size, aux;
 	for (;;) {
 
 		//Sends an overview of the current status
 		if (fg_status) {
-			size = sprintf(texto,
-					"Counter = %d	Tempo de delay = %d	Fg_start = %d	TempoUp = %d	\n",
-					counter, PULSE_DELAY, fg_Start,tempo_up);
+			size =
+					sprintf(texto,
+							"Counter = %d	Tempo de delay = %d	Fg_start = %d	RPM = %d	\n",
+							counter, PULSE_DELAY, fg_Start, RPM);
 			HAL_UART_Transmit(&huart2, texto, size, 100);
 		}
 
@@ -518,6 +687,10 @@ void SerialTask(void const * argument) {
 				HAL_UART_Transmit(&huart2, texto, size, 100);
 			}
 		}
+
+		//aux = Irms;
+		//size = sprintf(texto, "Irms = %d	\n", aux);
+		//HAL_UART_Transmit(&huart2, texto, size, 100);
 
 		//d stand for changing the deceleration time
 		if (rx == 'd') {
@@ -550,6 +723,91 @@ void SerialTask(void const * argument) {
 		osDelay(250);
 	}
 	/* USER CODE END SerialTask */
+}
+
+/* OverCurrentTask function */
+void OverCurrentTask(void const * argument) {
+	/* USER CODE BEGIN OverCurrentTask */
+	/* Infinite loop */
+	float ADC_value[16];
+	int index = 0;
+	int aux;
+	int Medidas_ADC = 16;
+
+	for (;;) {
+		if (fg_ADC_current) {
+			fg_ADC_current = 0;
+
+			for (aux = 0; aux < Medidas_ADC; aux++) { //Faz com que o valor seja de 311 de pico com 2v na entrada
+				ADC_value[aux] = (adc_current[aux] / 1); //Relação entre 311 e o valor do AD pra 2v
+			}
+
+			Irms = 0;
+			for (aux = 0; aux < Medidas_ADC; aux++) {
+				Irms += pow(ADC_value[aux], 2);
+			}
+
+			Irms = sqrt((Irms / Medidas_ADC));
+			Irms /= 2;
+
+		}
+
+		osDelay(10);
+	}
+	/* USER CODE END OverCurrentTask */
+}
+
+/* Comeca_Task function */
+void Comeca_Task(void const * argument) {
+	/* USER CODE BEGIN Comeca_Task */
+	/* Infinite loop */
+	char texto[50];
+	int size;
+
+	tempo = tempo_up;
+	counter = tempo;
+
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adc_current, 16); //NÃO CONSIGO FAZER ESSA PORRA FUNCIONAR!!!!!
+	HAL_TIM_Base_Start(&htim3);
+	HAL_TIM_Base_Start(&htim4);
+
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+
+	__HAL_TIM_SET_AUTORELOAD(&htim2, PULSE_DELAY + PULSE_WIDTH - 1);
+	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PULSE_DELAY);
+
+	size = sprintf(texto, "Iniciando perifericos");
+	HAL_UART_Transmit(&huart2, texto, size, 100);
+
+	vTaskSuspend(ComecaHandle);
+
+	size = sprintf(texto, "fechando perifericos");
+	HAL_UART_Transmit(&huart2, texto, size, 100);
+
+	for (;;) {
+		osDelay(1);
+	}
+	/* USER CODE END Comeca_Task */
+}
+
+/* RPMTask function */
+void RPMTask(void const * argument) {
+	/* USER CODE BEGIN RPMTask */
+	/* Infinite loop */
+	int size;
+	char texto[100];
+	for (;;) {
+		RPM = __HAL_TIM_GET_COUNTER(&htim4);
+		RPM *= 60;
+
+		size = sprintf(texto, "RPM: %d\n",RPM);
+		HAL_UART_Transmit(&huart2, texto, size, 100);
+
+		__HAL_TIM_SET_COUNTER(&htim4, 0);
+
+		osDelay(1000);
+	}
+	/* USER CODE END RPMTask */
 }
 
 /**

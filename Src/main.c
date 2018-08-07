@@ -62,6 +62,7 @@ DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart2;
 
@@ -70,6 +71,8 @@ osThreadId VerifyHandle;
 osThreadId CounterHandle;
 osThreadId SerialHandle;
 osThreadId OverCurrentHandle;
+osThreadId ComecaHandle;
+osThreadId RPMHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -85,42 +88,63 @@ static void MX_TIM2_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM4_Init(void);
 void RampTask(void const * argument);
 void VerifyTask(void const * argument);
 void CounterTask(void const * argument);
 void SerialTask(void const * argument);
 void OverCurrentTask(void const * argument);
+void Comeca_Task(void const * argument);
+void RPMTask(void const * argument);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+//! If it's on the soft is in a ramp
 char fg_Start = 0;
+
+//! Shows if the soft is idle
 char fg_End = 1;
 char fg_ADC_current = 0;
 
+//! Is the acceleration time
 int tempo_up = 10000; //Tem que ser em ms e será substituido pelo valor recebido pela serial.
+
+//! Deceleration time
 int tempo_down = 7000; //Tem que ser em ms e será substituido pelo valor recebido pela serial.
+
+//! time to the counter
 float tempo; //Tem que ser em ms e será substituido pelo valor recebido pela serial.
 
+//! Delay to the pulse on triac
 int PULSE_DELAY = 8330;	//Tempo em us
-int PULSE_WIDTH = 10;	//Tempo em us
+
+//! Width of the triac's pulse
+int PULSE_WIDTH = 1;	//Tempo em us
 int PULSE_WIDTH_CONST = 1000;	//Tempo em us
+
+//Minimal delay time to triac
 int minimal_delay = 500;
 
 float delay;
 
-int RampUp = 1;	//!Defines if it's a rising or lowering ramp
+//! Defines if it's a acceleration or deceleration ramp
+int RampUp = 1;
+
+//! Is the RPM of the motor
+int RPM;
+
 int counter;
 
 int Irms;
-uint32_t adc_current[18] = { 666 };
+uint16_t adc_current[16];
 
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 	fg_ADC_current = 1;
 }
 /* USER CODE END 0 */
@@ -160,22 +184,9 @@ int main(void)
   MX_TIM1_Init();
   MX_ADC1_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-	tempo = tempo_up;
-	counter = tempo;
 
-	adc_current[8] = 666;
-	adc_current[9] = 666;
-
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adc_current[1], 16);
-	HAL_TIM_Base_Start(&htim3);
-
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-
-	__HAL_TIM_SET_AUTORELOAD(&htim2, PULSE_DELAY + PULSE_WIDTH - 1);
-	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PULSE_DELAY);
-
-	__HAL_TIM_SET_AUTORELOAD(&htim1, tempo); //Define o valor do ARR do timer com base no tempo de subida
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -210,6 +221,14 @@ int main(void)
   /* definition and creation of OverCurrent */
   osThreadDef(OverCurrent, OverCurrentTask, osPriorityNormal, 0, 128);
   OverCurrentHandle = osThreadCreate(osThread(OverCurrent), NULL);
+
+  /* definition and creation of Comeca */
+  osThreadDef(Comeca, Comeca_Task, osPriorityRealtime, 0, 128);
+  ComecaHandle = osThreadCreate(osThread(Comeca), NULL);
+
+  /* definition and creation of RPM */
+  osThreadDef(RPM, RPMTask, osPriorityNormal, 0, 128);
+  RPMHandle = osThreadCreate(osThread(RPM), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -308,7 +327,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
   hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T3_TRGO;
@@ -337,22 +356,25 @@ static void MX_ADC1_Init(void)
 static void MX_TIM1_Init(void)
 {
 
-  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_SlaveConfigTypeDef sSlaveConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 41999;
-  htim1.Init.CounterMode = TIM_COUNTERMODE_DOWN;
-  htim1.Init.Period = 9;
-  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV2;
+  htim1.Init.Prescaler = 1;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 999;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_EXTERNAL1;
+  sSlaveConfig.InputTrigger = TIM_TS_TI1FP1;
+  sSlaveConfig.TriggerPolarity = TIM_TRIGGERPOLARITY_RISING;
+  sSlaveConfig.TriggerFilter = 0;
+  if (HAL_TIM_SlaveConfigSynchronization(&htim1, &sSlaveConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -378,7 +400,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 83;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 9999;
+  htim2.Init.Period = 8333;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
@@ -462,6 +484,41 @@ static void MX_TIM3_Init(void)
 
 }
 
+/* TIM4 init function */
+static void MX_TIM4_Init(void)
+{
+
+  TIM_SlaveConfigTypeDef sSlaveConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 0;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 999;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_EXTERNAL1;
+  sSlaveConfig.InputTrigger = TIM_TS_TI1FP1;
+  sSlaveConfig.TriggerPolarity = TIM_TRIGGERPOLARITY_RISING;
+  sSlaveConfig.TriggerFilter = 0;
+  if (HAL_TIM_SlaveConfigSynchronization(&htim4, &sSlaveConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /* USART2 init function */
 static void MX_USART2_UART_Init(void)
 {
@@ -511,6 +568,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin, GPIO_PIN_RESET);
@@ -572,7 +630,8 @@ void VerifyTask(void const * argument)
 				tempo = tempo_up;
 				counter = tempo;
 			} else {
-				HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin,
+						GPIO_PIN_RESET);
 				tempo = tempo_down;
 				counter = 0;
 			}
@@ -592,7 +651,8 @@ void CounterTask(void const * argument)
 
 		//Verifies if acceleration ramp is over
 		if (RampUp == 1 && counter <= 0) {
-			HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin,
+					GPIO_PIN_SET);
 			fg_Start = 0;
 			fg_End = 1;
 			RampUp = !RampUp;
@@ -641,8 +701,8 @@ void SerialTask(void const * argument)
 		if (fg_status) {
 			size =
 					sprintf(texto,
-							"Counter = %d	Tempo de delay = %d	Fg_start = %d	TempoUp = %d	\n",
-							counter, PULSE_DELAY, fg_Start, tempo_up);
+							"Counter = %d	Tempo de delay = %d	Fg_start = %d	RPM = %d	\n",
+							counter, PULSE_DELAY, fg_Start, RPM);
 			HAL_UART_Transmit(&huart2, texto, size, 100);
 		}
 
@@ -711,7 +771,7 @@ void OverCurrentTask(void const * argument)
 			fg_ADC_current = 0;
 
 			for (aux = 0; aux < Medidas_ADC; aux++) { //Faz com que o valor seja de 311 de pico com 2v na entrada
-				ADC_value[aux] = (0.25 * adc_current[aux]); //Relação entre 311 e o valor do AD pra 2v
+				ADC_value[aux] = (adc_current[aux] / 1); //Relação entre 311 e o valor do AD pra 2v
 			}
 
 			Irms = 0;
@@ -727,6 +787,61 @@ void OverCurrentTask(void const * argument)
 		osDelay(10);
 	}
   /* USER CODE END OverCurrentTask */
+}
+
+/* Comeca_Task function */
+void Comeca_Task(void const * argument)
+{
+  /* USER CODE BEGIN Comeca_Task */
+	/* Infinite loop */
+	char texto[50];
+	int size;
+
+	tempo = tempo_up;
+	counter = tempo;
+
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adc_current, 16); //NÃO CONSIGO FAZER ESSA PORRA FUNCIONAR!!!!!
+	HAL_TIM_Base_Start(&htim3);
+	HAL_TIM_Base_Start(&htim1);
+
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+
+	__HAL_TIM_SET_AUTORELOAD(&htim2, PULSE_DELAY + PULSE_WIDTH - 1);
+	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PULSE_DELAY);
+
+	size = sprintf(texto, "Iniciando perifericos");
+	HAL_UART_Transmit(&huart2, texto, size, 100);
+
+	vTaskSuspend(ComecaHandle);
+
+	size = sprintf(texto, "fechando perifericos");
+	HAL_UART_Transmit(&huart2, texto, size, 100);
+
+	for (;;) {
+		osDelay(1);
+	}
+  /* USER CODE END Comeca_Task */
+}
+
+/* RPMTask function */
+void RPMTask(void const * argument)
+{
+  /* USER CODE BEGIN RPMTask */
+	/* Infinite loop */
+	int size;
+	char texto[100];
+	for (;;) {
+		RPM = __HAL_TIM_GET_COUNTER(&htim1);
+		RPM *= 60;
+
+		size = sprintf(texto, "RPM: %d\n",RPM);
+		HAL_UART_Transmit(&huart2, texto, size, 100);
+
+		__HAL_TIM_SET_COUNTER(&htim1, 0);
+
+		osDelay(1000);
+	}
+  /* USER CODE END RPMTask */
 }
 
 /**
