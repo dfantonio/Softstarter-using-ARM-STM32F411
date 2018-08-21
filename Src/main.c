@@ -139,6 +139,10 @@ int RPM;
 int counter;
 
 int Irms;
+int Irms_over = 400;   //é a corrente do motor quando o eixo for travado - tem que medir e mudar aqui na variável
+int Vrms;
+int Vrms_over = 220;  // é a tensão de sobrecorrente
+
 uint16_t adc_current[16];
 
 /* USER CODE END PFP */
@@ -695,6 +699,7 @@ void SerialTask(void const * argument)
 	char texto[100];
 	int fg_status = 0;
 	int size, aux;
+
 	for (;;) {
 
 		//Sends an overview of the current status
@@ -718,10 +723,12 @@ void SerialTask(void const * argument)
 				HAL_UART_Transmit(&huart2, texto, size, 100);
 			}
 		}
+		/*if(Irms >= (Irms_over) ){
+			aux = Irms;
+			size = sprintf(texto, "Irms = %d	\n", aux);
+			HAL_UART_Transmit(&huart2, texto, size, 100);
+		}*/
 
-		//aux = Irms;
-		//size = sprintf(texto, "Irms = %d	\n", aux);
-		//HAL_UART_Transmit(&huart2, texto, size, 100);
 
 		//d stand for changing the deceleration time
 		if (rx == 'd') {
@@ -765,23 +772,41 @@ void OverCurrentTask(void const * argument)
 	int index = 0;
 	int aux;
 	int Medidas_ADC = 16;
+	//variáveis serial
+	char texto[1]; // é só um caracter que vai mandar
+	int size;
 
 	for (;;) {
 		if (fg_ADC_current) {
 			fg_ADC_current = 0;
 
+
 			for (aux = 0; aux < Medidas_ADC; aux++) { //Faz com que o valor seja de 311 de pico com 2v na entrada
-				ADC_value[aux] = (adc_current[aux] / 1); //Relação entre 311 e o valor do AD pra 2v
+				ADC_value[aux] = (adc_current[aux]); //Relação entre 311 e o valor do AD pra 2v
 			}
+
 
 			Irms = 0;
 			for (aux = 0; aux < Medidas_ADC; aux++) {
 				Irms += pow(ADC_value[aux], 2);
 			}
 
+			Vrms = 0;
+			Vrms = Irms*100;
+
 			Irms = sqrt((Irms / Medidas_ADC));
 			Irms /= 2;
+			//quando der overcurrent mandar um "i" via serial (SÓ O CARACTER)
+			//quando der overvoltage mandar um "v" via serial (SÓ O CARACTER)
 
+			if(Irms >= (Irms_over) ){ //tem que mudar os valores de Irms_over pro valor real
+				size = sprintf(texto, "i\n");
+				HAL_UART_Transmit(&huart2, texto, size, 100);
+			}
+			if(Vrms >= (Vrms_over)){ //tem que mudar os valores de Vrms_over pro valor real
+				size = sprintf(texto, "v\n");
+				HAL_UART_Transmit(&huart2, texto, size, 100);
+			}
 		}
 
 		osDelay(10);
@@ -835,7 +860,7 @@ void RPMTask(void const * argument)
 		RPM *= 60;
 
 		size = sprintf(texto, "RPM: %d\n",RPM);
-		HAL_UART_Transmit(&huart2, texto, size, 100);
+		//HAL_UART_Transmit(&huart2, texto, size, 100);
 
 		__HAL_TIM_SET_COUNTER(&htim1, 0);
 
