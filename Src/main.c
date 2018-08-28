@@ -360,9 +360,9 @@ static void MX_TIM1_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 1;
+  htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 999;
+  htim1.Init.Period = 9999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
@@ -494,7 +494,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 0;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 999;
+  htim4.Init.Period = 9999;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
   {
@@ -695,6 +695,7 @@ void SerialTask(void const * argument)
 	char texto[100];
 	int fg_status = 0;
 	int size, aux;
+
 	for (;;) {
 
 		//Sends an overview of the current status
@@ -719,9 +720,8 @@ void SerialTask(void const * argument)
 			}
 		}
 
-		//aux = Irms;
-		//size = sprintf(texto, "Irms = %d	\n", aux);
-		//HAL_UART_Transmit(&huart2, texto, size, 100);
+		size = sprintf(texto, "Irms = %d	\n", Irms);
+		HAL_UART_Transmit(&huart2, texto, size, 100);
 
 		//d stand for changing the deceleration time
 		if (rx == 'd') {
@@ -766,13 +766,20 @@ void OverCurrentTask(void const * argument)
 	int aux;
 	int Medidas_ADC = 16;
 
+	char texto[100];
+	int fg_status = 0;
+	int size;
+
+
 	for (;;) {
 		if (fg_ADC_current) {
 			fg_ADC_current = 0;
 
+
 			for (aux = 0; aux < Medidas_ADC; aux++) { //Faz com que o valor seja de 311 de pico com 2v na entrada
 				ADC_value[aux] = (adc_current[aux] / 1); //Relação entre 311 e o valor do AD pra 2v
 			}
+
 
 			Irms = 0;
 			for (aux = 0; aux < Medidas_ADC; aux++) {
@@ -781,6 +788,12 @@ void OverCurrentTask(void const * argument)
 
 			Irms = sqrt((Irms / Medidas_ADC));
 			Irms /= 2;
+/*
+			size = sprintf(texto, "Irms = %d	\n", Irms);
+			HAL_UART_Transmit(&huart2, texto, size, 100);
+			*/
+			//quando der overcurrent mandar um "i" via serial (SÓ O CARACTER)
+			//quando der overvoltage mandar um "v" via serial (SÓ O CARACTER)
 
 		}
 
@@ -834,9 +847,9 @@ void RPMTask(void const * argument)
 		RPM = __HAL_TIM_GET_COUNTER(&htim1);
 		RPM *= 60;
 
-		size = sprintf(texto, "RPM: %d\n",RPM);
+		/*size = sprintf(texto, "RPM: %d\n",RPM);
 		HAL_UART_Transmit(&huart2, texto, size, 100);
-
+*/
 		__HAL_TIM_SET_COUNTER(&htim1, 0);
 
 		osDelay(1000);
