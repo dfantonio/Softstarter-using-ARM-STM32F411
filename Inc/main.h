@@ -65,6 +65,12 @@
 #define LED_GPIO_Port GPIOA
 #define bypass_relay_Pin GPIO_PIN_6
 #define bypass_relay_GPIO_Port GPIOA
+#define Green_LED_Pin GPIO_PIN_10
+#define Green_LED_GPIO_Port GPIOC
+#define Yellow_LED_Pin GPIO_PIN_11
+#define Yellow_LED_GPIO_Port GPIOC
+#define Red_LED_Pin GPIO_PIN_12
+#define Red_LED_GPIO_Port GPIOC
 
 /* ########################## Assert Selection ############################## */
 /**

@@ -108,13 +108,13 @@ char fg_End = 1;
 char fg_ADC_current = 0;
 
 //! Is the acceleration time
-int tempo_up = 10000; //Tem que ser em ms e será substituido pelo valor recebido pela serial.
+int tempo_up = 10000; //Tem que ser em ms e ser substituido pelo valor recebido pela serial.
 
 //! Deceleration time
-int tempo_down = 7000; //Tem que ser em ms e será substituido pelo valor recebido pela serial.
+int tempo_down = 7000; //Tem que ser em ms e ser substituido pelo valor recebido pela serial.
 
 //! time to the counter
-float tempo; //Tem que ser em ms e será substituido pelo valor recebido pela serial.
+float tempo; //Tem que ser em ms e ser substituido pelo valor recebido pela serial.
 
 //! Delay to the pulse on triac
 int PULSE_DELAY = 8330;	//Tempo em us
@@ -137,6 +137,10 @@ int RPM;
 int counter;
 
 int Irms;
+int Irms_over = 1400; //ï¿½ a corrente do motor quando o eixo for travado - tem que medir e mudar aqui na variï¿½vel
+int Vrms;
+int Vrms_over = 220;  // ï¿½ a tensï¿½o de sobrecorrente
+
 uint16_t adc_current[16];
 
 /* USER CODE END PFP */
@@ -346,21 +350,24 @@ static void MX_ADC1_Init(void) {
 /* TIM1 init function */
 static void MX_TIM1_Init(void) {
 
-	TIM_ClockConfigTypeDef sClockSourceConfig;
+	TIM_SlaveConfigTypeDef sSlaveConfig;
 	TIM_MasterConfigTypeDef sMasterConfig;
 
 	htim1.Instance = TIM1;
-	htim1.Init.Prescaler = 41999;
-	htim1.Init.CounterMode = TIM_COUNTERMODE_DOWN;
-	htim1.Init.Period = 9;
-	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV2;
+	htim1.Init.Prescaler = 1;
+	htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim1.Init.Period = 999;
+	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	htim1.Init.RepetitionCounter = 0;
 	if (HAL_TIM_Base_Init(&htim1) != HAL_OK) {
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
-	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-	if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK) {
+	sSlaveConfig.SlaveMode = TIM_SLAVEMODE_EXTERNAL1;
+	sSlaveConfig.InputTrigger = TIM_TS_TI1FP1;
+	sSlaveConfig.TriggerPolarity = TIM_TRIGGERPOLARITY_RISING;
+	sSlaveConfig.TriggerFilter = 0;
+	if (HAL_TIM_SlaveConfigSynchronization(&htim1, &sSlaveConfig) != HAL_OK) {
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
@@ -664,6 +671,7 @@ void SerialTask(void const * argument) {
 	char texto[100];
 	int fg_status = 0;
 	int size, aux;
+
 	for (;;) {
 
 		//Sends an overview of the current status
@@ -688,9 +696,9 @@ void SerialTask(void const * argument) {
 			}
 		}
 
-		//aux = Irms;
-		//size = sprintf(texto, "Irms = %d	\n", aux);
-		//HAL_UART_Transmit(&huart2, texto, size, 100);
+		aux = Irms;
+		size = sprintf(texto, "Irms = %d	\n", aux);
+		HAL_UART_Transmit(&huart2, texto, size, 100);
 
 		//d stand for changing the deceleration time
 		if (rx == 'd') {
@@ -719,6 +727,17 @@ void SerialTask(void const * argument) {
 			HAL_UART_Transmit(&huart2, texto, size, 100);
 		}
 
+		/*
+		 if (Irms >= (Irms_over)) { //tem que mudar os valores de Irms_over pro valor real
+		 size = sprintf(texto, "i\n");
+		 HAL_UART_Transmit(&huart2, texto, size, 100);
+		 }
+		 if (Vrms >= (Vrms_over)) { //tem que mudar os valores de Vrms_over pro valor real
+		 size = sprintf(texto, "v\n");
+		 HAL_UART_Transmit(&huart2, texto, size, 100);
+		 }
+		 */
+
 		rx = 0;
 		osDelay(250);
 	}
@@ -732,23 +751,39 @@ void OverCurrentTask(void const * argument) {
 	float ADC_value[16];
 	int index = 0;
 	int aux;
+	int result;
+	int rms;
 	int Medidas_ADC = 16;
+	int sum[32];
+	float relation = 1.6;
 
 	for (;;) {
 		if (fg_ADC_current) {
 			fg_ADC_current = 0;
 
 			for (aux = 0; aux < Medidas_ADC; aux++) { //Faz com que o valor seja de 311 de pico com 2v na entrada
-				ADC_value[aux] = (adc_current[aux] / 1); //Relação entre 311 e o valor do AD pra 2v
+				ADC_value[aux] = (adc_current[aux]/relation); //Relaï¿½ï¿½o entre 311 e o valor do AD pra 2v
 			}
 
-			Irms = 0;
+			rms = 0;
 			for (aux = 0; aux < Medidas_ADC; aux++) {
-				Irms += pow(ADC_value[aux], 2);
+				rms += pow(ADC_value[aux], 2);
 			}
 
-			Irms = sqrt((Irms / Medidas_ADC));
-			Irms /= 2;
+			rms = sqrt((rms / Medidas_ADC));
+
+			if (index > 31) {
+				index = 0;
+				Irms = 0;
+				for (aux = 0; aux < 32; aux++) {
+					Irms += sum[aux];
+				}
+				Irms /= 32;
+			}
+			sum[index] = rms;
+			index++;
+			//quando der overcurrent mandar um "i" via serial (Sï¿½ O CARACTER)
+			//quando der overvoltage mandar um "v" via serial (Sï¿½ O CARACTER)
 
 		}
 
@@ -767,9 +802,9 @@ void Comeca_Task(void const * argument) {
 	tempo = tempo_up;
 	counter = tempo;
 
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adc_current, 16); //NÃO CONSIGO FAZER ESSA PORRA FUNCIONAR!!!!!
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adc_current, 16); //Nï¿½O CONSIGO FAZER ESSA PORRA FUNCIONAR!!!!!
 	HAL_TIM_Base_Start(&htim3);
-	HAL_TIM_Base_Start(&htim4);
+	HAL_TIM_Base_Start(&htim1);
 
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
@@ -797,13 +832,13 @@ void RPMTask(void const * argument) {
 	int size;
 	char texto[100];
 	for (;;) {
-		RPM = __HAL_TIM_GET_COUNTER(&htim4);
+		RPM = __HAL_TIM_GET_COUNTER(&htim1);
 		RPM *= 60;
 
-		size = sprintf(texto, "RPM: %d\n",RPM);
-		HAL_UART_Transmit(&huart2, texto, size, 100);
+		size = sprintf(texto, "RPM: %d\n", RPM);
+		//HAL_UART_Transmit(&huart2, texto, size, 100);
 
-		__HAL_TIM_SET_COUNTER(&htim4, 0);
+		__HAL_TIM_SET_COUNTER(&htim1, 0);
 
 		osDelay(1000);
 	}
