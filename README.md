@@ -14,7 +14,7 @@ This is a project intended for the matter of industrial eletronics and microproc
 - [X] Implement the triggering to triac circuit
 - [X] Be able to vary the ramps time
 - [X] Bypass relay
-- [ ] Eletrical break
 - [X] Measure RPM
-- [ ] Schematic
+- [X] Schematic
 - [X] measure current throught a current transformer
+- [X] Overcurrent protection
