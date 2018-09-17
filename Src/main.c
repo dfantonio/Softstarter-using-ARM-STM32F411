@@ -47,6 +47,8 @@
  */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "math.h"
+#include "stdio.h"
 #include "stm32f4xx_hal.h"
 #include "cmsis_os.h"
 
@@ -140,8 +142,12 @@ int Irms;
 int Irms_over = 1400; //� a corrente do motor quando o eixo for travado - tem que medir e mudar aqui na vari�vel
 int Vrms;
 int Vrms_over = 220;  // � a tens�o de sobrecorrente
+float relation = 1.4325;
 
-int corrente_nominal = 600;
+int corrente_nominal = 400;
+
+//! Indicates if the soft shall start through the serial
+int fg_serial = 0;
 
 uint16_t adc_current[16];
 
@@ -613,8 +619,10 @@ void VerifyTask(void const * argument) {
 	/* Infinite loop */
 
 	for (;;) {
-		if (HAL_GPIO_ReadPin(Button_GPIO_Port, Button_Pin) == GPIO_PIN_RESET
-				&& fg_End == 1) {
+		if ((HAL_GPIO_ReadPin(Button_GPIO_Port, Button_Pin) == GPIO_PIN_RESET
+				|| fg_serial) && fg_End == 1) {
+
+			fg_serial = 0;
 			fg_Start = 1;
 			fg_End = 0;
 			if (RampUp == 1) {
@@ -626,7 +634,6 @@ void VerifyTask(void const * argument) {
 				tempo = tempo_down;
 				counter = 0;
 			}
-
 		}
 
 		if (Irms >= 0 && Irms < corrente_nominal * 1.5) {
@@ -645,9 +652,18 @@ void VerifyTask(void const * argument) {
 			HAL_GPIO_WritePin(GPIOC, Green_LED_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOC, Yellow_LED_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOC, Red_LED_Pin, GPIO_PIN_SET);
+
+			HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin,
+					GPIO_PIN_RESET);
+			counter = 1;
+			RampUp = 1;
+			fg_Start = 0;
+			fg_End = 1;
+			PULSE_DELAY = 8330;
+			PULSE_WIDTH = 1;
 		}
 
-		osDelay(100);
+		osDelay(20);
 	}
 	/* USER CODE END VerifyTask */
 }
@@ -674,8 +690,11 @@ void CounterTask(void const * argument) {
 			RampUp = !RampUp;
 		}
 		if (fg_Start) {
-			if (RampUp == 1)
+			if (RampUp == 1) {
 				counter = counter - 2;
+				if (HAL_GPIO_ReadPin(GPIOC, Yellow_LED_Pin) == GPIO_PIN_SET)
+					counter = counter + 2;
+			}
 			if (RampUp == 0)
 				counter = counter + 2;
 
@@ -699,43 +718,91 @@ void CounterTask(void const * argument) {
 void SerialTask(void const * argument) {
 	/* USER CODE BEGIN SerialTask */
 	/* Infinite loop */
-	char rx, tempo_serial[4];
+	char rx, tempo_serial[6];
 	char texto[100];
 	int fg_status = 0;
 	int size, aux;
+	int numero;
 
 	for (;;) {
 
 		//Sends an overview of the current status
 		if (fg_status) {
-			size =
-					sprintf(texto,
-							"Counter = %d	Tempo de delay = %d	Fg_start = %d	RPM = %d	\n",
-							counter, PULSE_DELAY, fg_Start, RPM);
+			//size =sprintf(texto,"Counter = %d	Tempo de delay = %d	Fg_start = %d	RPM = %d	\n",counter, PULSE_DELAY, fg_Start, RPM);
+			size = sprintf(texto, "Irms = %d\n", Irms);
 			HAL_UART_Transmit(&huart2, texto, size, 100);
+			osDelay(100);
+		}
+
+		if (HAL_UART_Receive(&huart2, tempo_serial, 3, 1) == HAL_OK) {
+
+			if (tempo_serial[0] == 'u') {
+				tempo_serial[0] = tempo_serial[1];
+				tempo_serial[1] = tempo_serial[2];
+				tempo_serial[2] = 0;
+				tempo_serial[3] = 0;
+
+				tempo_up = atoi(tempo_serial);
+				tempo_up *= 1000;
+				fg_serial = 1;
+			}
+
+			if (tempo_serial[0] == 'd') {
+				tempo_serial[0] = tempo_serial[1];
+				tempo_serial[1] = tempo_serial[2];
+				tempo_serial[2] = 0;
+				tempo_serial[3] = 0;
+
+				tempo_down = atoi(tempo_serial);
+				tempo_down *= 1000;
+				fg_serial = 1;
+			}
+
+			if (tempo_serial[0] == '$') {
+				size = sprintf(texto, "I%i;V%i;R%i\n", Irms, Vrms, RPM);
+				HAL_UART_Transmit(&huart2, texto, size, 100);
+			}
+
 		}
 
 		//Receives a single char from serial
-		HAL_UART_Receive(&huart2, &rx, 1, 1);
+		//HAL_UART_Receive(&huart2, &rx, 1, 1);
+		//osDelay(1);
 
 		//u stands for changing the acceleration time
 		if (rx == 'u') {
-			if (HAL_UART_Receive(&huart2, tempo_serial, 5, 5000) == HAL_OK) {
+			if (HAL_UART_Receive(&huart2, tempo_serial, 2, 5000) == HAL_OK) {
 				tempo_up = atoi(tempo_serial);
+				tempo_up *= 1000;
+
+				fg_serial = 1;
+//				if (RampUp == 1 && fg_End == 1) {
+//					tempo = tempo_up;
+//					counter = tempo;
+//					fg_Start = 1;
+//					fg_End = 0;
+//				}
+
 			} else {
 				size = sprintf(texto, "TIMEOUT - Acceleration Time\n");
 				HAL_UART_Transmit(&huart2, texto, size, 100);
 			}
 		}
 
-		aux = Irms;
-		size = sprintf(texto, "Irms = %d	\n", aux);
-		HAL_UART_Transmit(&huart2, texto, size, 100);
-
 		//d stand for changing the deceleration time
 		if (rx == 'd') {
-			if (HAL_UART_Receive(&huart2, tempo_serial, 5, 5000) == HAL_OK) {
+			if (HAL_UART_Receive(&huart2, tempo_serial, 2, 5000) == HAL_OK) {
 				tempo_down = atoi(tempo_serial);
+				tempo_down *= 1000;
+
+				fg_serial = 1;
+
+//				fg_Start = 1;
+//				fg_End = 0;
+//				HAL_GPIO_WritePin(bypass_relay_GPIO_Port, bypass_relay_Pin,
+//						GPIO_PIN_RESET);
+
+				//counter = 0;
 
 			} else {
 				size = sprintf(texto, "TIMEOUT - Deceleration Time\n");
@@ -751,9 +818,18 @@ void SerialTask(void const * argument) {
 				fg_status = 0;
 		}
 
-		//c stand for defining the new nominal current
+		//c stand for defining the new relation of current
 		if (rx == 'c') {
-			corrente_nominal = Irms;
+			if (HAL_UART_Receive(&huart2, tempo_serial, 3, 3000) == HAL_OK) {
+				relation = 1;
+				osDelay(250);
+				relation = Irms;
+				relation /= atoi(tempo_serial);
+
+				corrente_nominal = atoi(tempo_serial);
+
+				//relation = Irms/atoi(tempo_serial);
+			}
 		}
 
 		//h stand for printing a serial command list
@@ -764,19 +840,13 @@ void SerialTask(void const * argument) {
 			HAL_UART_Transmit(&huart2, texto, size, 100);
 		}
 
-		/*
-		 if (Irms >= (Irms_over)) { //tem que mudar os valores de Irms_over pro valor real
-		 size = sprintf(texto, "i\n");
-		 HAL_UART_Transmit(&huart2, texto, size, 100);
-		 }
-		 if (Vrms >= (Vrms_over)) { //tem que mudar os valores de Vrms_over pro valor real
-		 size = sprintf(texto, "v\n");
-		 HAL_UART_Transmit(&huart2, texto, size, 100);
-		 }
-		 */
+		if (rx == '#') {
+			size = sprintf(texto, "u %i d %i\n", tempo_up, tempo_down);
+			HAL_UART_Transmit(&huart2, texto, size, 100);
+		}
 
 		rx = 0;
-		osDelay(250);
+		osDelay(1);
 	}
 	/* USER CODE END SerialTask */
 }
@@ -792,14 +862,14 @@ void OverCurrentTask(void const * argument) {
 	int rms;
 	int Medidas_ADC = 16;
 	int sum[32];
-	float relation = 1.6;
 
 	for (;;) {
 		if (fg_ADC_current) {
 			fg_ADC_current = 0;
 
 			for (aux = 0; aux < Medidas_ADC; aux++) { //Faz com que o valor seja de 311 de pico com 2v na entrada
-				ADC_value[aux] = (adc_current[aux] / relation); //Rela��o entre 311 e o valor do AD pra 2v
+				//ADC_value[aux] = (adc_current[aux] / relation); //Rela��o entre 311 e o valor do AD pra 2v
+				ADC_value[aux] = (adc_current[aux]); //Rela��o entre 311 e o valor do AD pra 2v
 			}
 
 			rms = 0;
@@ -808,6 +878,8 @@ void OverCurrentTask(void const * argument) {
 			}
 
 			rms = sqrt((rms / Medidas_ADC));
+
+			rms /= relation;
 
 			if (index > 31) {
 				index = 0;
