@@ -15,6 +15,6 @@ This is a project intended for the matter of industrial eletronics and microproc
 - [X] Be able to vary the ramps time
 - [X] Bypass relay
 - [ ] Eletrical break
-- [ ] Measure RPM
+- [X] Measure RPM
 - [ ] Schematic
-- [ ] measure current throught a current transformer
+- [X] measure current throught a current transformer
