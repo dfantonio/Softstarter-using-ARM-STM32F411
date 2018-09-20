@@ -90,12 +90,26 @@ static void MX_TIM1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
+
+//! Counts up or down depending on the settings
 void RampTask(void const * argument);
+
+//! Monitors the current percentage and if the board button is pressed
 void VerifyTask(void const * argument);
+
+//! Verifies for the end of ramps and 150% overcurrent protection
 void CounterTask(void const * argument);
+
+//! Responsable for the serial stuff
 void SerialTask(void const * argument);
+
+//! Calculates the RMS current based on the ADC read
 void OverCurrentTask(void const * argument);
+
+//! Initialize all the peripherals and then lock the thread itself
 void Comeca_Task(void const * argument);
+
+//! Measure and calculates the RPM
 void RPMTask(void const * argument);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
@@ -107,27 +121,32 @@ char fg_Start = 0;
 
 //! Shows if the soft is idle
 char fg_End = 1;
+
+//! Indicates if the ADC conversion is over
 char fg_ADC_current = 0;
 
-//! Is the acceleration time
-int tempo_up = 10000; //Tem que ser em ms e ser substituido pelo valor recebido pela serial.
+//! Is the acceleration time in milliseconds
+int tempo_up = 10000;
 
-//! Deceleration time
-int tempo_down = 7000; //Tem que ser em ms e ser substituido pelo valor recebido pela serial.
+//! Deceleration time in milliseconds
+int tempo_down = 7000;
 
-//! time to the counter
-float tempo; //Tem que ser em ms e ser substituido pelo valor recebido pela serial.
+//! time used as a reference for the ramps in milliseconds
+float tempo;
 
-//! Delay to the pulse on triac
-int PULSE_DELAY = 8330;	//Tempo em us
+//! Delay to the pulse on triac in microseconds
+int PULSE_DELAY = 8330;
 
-//! Width of the triac's pulse
-int PULSE_WIDTH = 1;	//Tempo em us
-int PULSE_WIDTH_CONST = 1000;	//Tempo em us
+//! Width of the triac's pulse in microseconds
+int PULSE_WIDTH = 1;
 
-//Minimal delay time to triac
+//! Reference pulse width for the triac in microseconds
+int PULSE_WIDTH_CONST = 1000;
+
+//! Minimal delay time to triac
 int minimal_delay = 500;
 
+//! It's part of the process to determine the PULSE_DELAY
 float delay;
 
 //! Defines if it's a acceleration or deceleration ramp
@@ -136,24 +155,29 @@ int RampUp = 1;
 //! Is the RPM of the motor
 int RPM;
 
+//! The time variable responsible for the entire counting process
 int counter;
 
+//! Is the current RMS
 int Irms;
-int Irms_over = 1400; //� a corrente do motor quando o eixo for travado - tem que medir e mudar aqui na vari�vel
-int Vrms;
-int Vrms_over = 220;  // � a tens�o de sobrecorrente
+
+//! Is the relation between the 12 bits from the ADC and the current itself. It basically converts the voltage into current
 float relation = 1.4325;
 
+//! Is the nominal current of the motor
 int corrente_nominal = 400;
 
 //! Indicates if the soft shall start through the serial
 int fg_serial = 0;
 
+//! Is a vector of reads from the ADC
 uint16_t adc_current[16];
 
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
+//! Is the callback from the DMA which stands for the end of conversion
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 	fg_ADC_current = 1;
 }
@@ -698,7 +722,6 @@ void CounterTask(void const * argument) {
 			if (RampUp == 0)
 				counter = counter + 2;
 
-			//delay = (counter / tempo * (8333-PULSE_WIDTH-minimal_delay));
 			delay = (counter / tempo * (8333 - minimal_delay));
 			PULSE_DELAY = delay + minimal_delay;
 
@@ -759,7 +782,7 @@ void SerialTask(void const * argument) {
 			}
 
 			if (tempo_serial[0] == '$') {
-				size = sprintf(texto, "I%i;V%i;R%i\n", Irms, Vrms, RPM);
+				size = sprintf(texto, "I%i;R%i\n", Irms, RPM);
 				HAL_UART_Transmit(&huart2, texto, size, 100);
 			}
 

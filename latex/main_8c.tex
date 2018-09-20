@@ -1,0 +1,932 @@
+\hypertarget{main_8c}{}\section{Src/main.c File Reference}
+\label{main_8c}\index{Src/main.\+c@{Src/main.\+c}}
+
+
+\+: Main program body  
+
+
+{\ttfamily \#include \char`\"{}main.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}math.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}stdio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}stm32f4xx\+\_\+hal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}cmsis\+\_\+os.\+h\char`\"{}}\newline
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{main_8c_a70af21c671abfcc773614a9a4f63d920}{System\+Clock\+\_\+\+Config} (void)
+\begin{DoxyCompactList}\small\item\em System Clock Configuration. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_a6d88ac71e23aaa96467829cc96a9e88b}{Ramp\+Task} (void const $\ast$argument)
+\begin{DoxyCompactList}\small\item\em Counts up or down depending on the settings. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_aa7001a59cf7cf23af4e72b0c24dfbd72}{Verify\+Task} (void const $\ast$argument)
+\begin{DoxyCompactList}\small\item\em Monitors the current percentage and if the board button is pressed. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_a529e50368e7509729cdcb31ab2073ad1}{Counter\+Task} (void const $\ast$argument)
+\begin{DoxyCompactList}\small\item\em Verifies for the end of ramps and 150\% overcurrent protection. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_a6bf060e07d44c06e14cfa4a3cc1171fb}{Serial\+Task} (void const $\ast$argument)
+\begin{DoxyCompactList}\small\item\em Responsable for the serial stuff. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_a1f769319a61c9804941abb8dcff26535}{Over\+Current\+Task} (void const $\ast$argument)
+\begin{DoxyCompactList}\small\item\em Calculates the R\+MS current based on the A\+DC read. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_a8fd7bb5cdeb9aa823f13806774d64842}{Comeca\+\_\+\+Task} (void const $\ast$argument)
+\begin{DoxyCompactList}\small\item\em Initialize all the peripherals and then lock the thread itself. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_a1534f05dcb26dfde99ea71444cc05666}{R\+P\+M\+Task} (void const $\ast$argument)
+\begin{DoxyCompactList}\small\item\em Measure and calculates the R\+PM. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_ae70bce6c39d0b570a7523b86738cec4b}{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Msp\+Post\+Init} (T\+I\+M\+\_\+\+Handle\+Type\+Def $\ast$htim)
+\item 
+void \hyperlink{main_8c_af20a88180db1113be1e89266917d148b}{H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Conv\+Cplt\+Callback} (A\+D\+C\+\_\+\+Handle\+Type\+Def $\ast$hadc)
+\begin{DoxyCompactList}\small\item\em Is the callback from the D\+MA which stands for the end of conversion. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_a840291bc02cba5474a4cb46a9b9566fe}{main} (void)
+\begin{DoxyCompactList}\small\item\em The application entry point. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_a8a3b0ad512a6e6c6157440b68d395eac}{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Period\+Elapsed\+Callback} (T\+I\+M\+\_\+\+Handle\+Type\+Def $\ast$htim)
+\begin{DoxyCompactList}\small\item\em Period elapsed callback in non blocking mode. \end{DoxyCompactList}\item 
+void \hyperlink{main_8c_a829116a51f1db1a72ebd1120f60719d5}{\+\_\+\+Error\+\_\+\+Handler} (char $\ast$file, int line)
+\begin{DoxyCompactList}\small\item\em This function is executed in case of error occurrence. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+A\+D\+C\+\_\+\+Handle\+Type\+Def \hyperlink{main_8c_a22b804736f5648d52f639b2647d4ed13}{hadc1}
+\item 
+D\+M\+A\+\_\+\+Handle\+Type\+Def \hyperlink{main_8c_a1c126854bb1813d31ab4776b21dcc51f}{hdma\+\_\+adc1}
+\item 
+T\+I\+M\+\_\+\+Handle\+Type\+Def \hyperlink{main_8c_a25fc663547539bc49fecc0011bd76ab5}{htim1}
+\item 
+T\+I\+M\+\_\+\+Handle\+Type\+Def \hyperlink{main_8c_a2c80fd5510e2990a59a5c90d745c716c}{htim2}
+\item 
+T\+I\+M\+\_\+\+Handle\+Type\+Def \hyperlink{main_8c_aac3d2c59ee0e3bbae1b99529a154eb62}{htim3}
+\item 
+T\+I\+M\+\_\+\+Handle\+Type\+Def \hyperlink{main_8c_a85788cec5a97ee377e4ee2e74f026484}{htim4}
+\item 
+U\+A\+R\+T\+\_\+\+Handle\+Type\+Def \hyperlink{main_8c_aa9479c261d65eecedd3d9582f7f0f89c}{huart2}
+\item 
+os\+Thread\+Id \hyperlink{main_8c_a4e43b4769e9b30bec05861fab0d8e7f4}{Ramp\+Handle}
+\item 
+os\+Thread\+Id \hyperlink{main_8c_a3f95c9df4c6f22b51be355e0ffb86071}{Verify\+Handle}
+\item 
+os\+Thread\+Id \hyperlink{main_8c_a842e258169c5c1f6073ef4c3dd464fd2}{Counter\+Handle}
+\item 
+os\+Thread\+Id \hyperlink{main_8c_a51f37ff73ffafa183e194d541caeda45}{Serial\+Handle}
+\item 
+os\+Thread\+Id \hyperlink{main_8c_a686e1ac95d7b0ced8877029cbbdb78b7}{Over\+Current\+Handle}
+\item 
+os\+Thread\+Id \hyperlink{main_8c_a910854a76b4b2c3f4d70530b64c29d46}{Comeca\+Handle}
+\item 
+os\+Thread\+Id \hyperlink{main_8c_ae1f09b8797189483f1f36d0037e1edd5}{R\+P\+M\+Handle}
+\item 
+char \hyperlink{main_8c_a05742093ba179b8511cce51661298f5e}{fg\+\_\+\+Start} = 0
+\begin{DoxyCompactList}\small\item\em If it\textquotesingle{}s on the soft is in a ramp. \end{DoxyCompactList}\item 
+char \hyperlink{main_8c_a66443e92f65cd5357a66fed30bb12e07}{fg\+\_\+\+End} = 1
+\begin{DoxyCompactList}\small\item\em Shows if the soft is idle. \end{DoxyCompactList}\item 
+char \hyperlink{main_8c_a12c02b79a5954981fbd4ab4eda282b53}{fg\+\_\+\+A\+D\+C\+\_\+current} = 0
+\begin{DoxyCompactList}\small\item\em Indicates if the A\+DC conversion is over. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_a9621e5934d376c255ddb0244320139ff}{tempo\+\_\+up} = 10000
+\begin{DoxyCompactList}\small\item\em Is the acceleration time in milliseconds. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_a7e76dc387d3dd0f9f1073153977cf10f}{tempo\+\_\+down} = 7000
+\begin{DoxyCompactList}\small\item\em Deceleration time in milliseconds. \end{DoxyCompactList}\item 
+float \hyperlink{main_8c_a15448d4a27a20e04e8ba36b18593f069}{tempo}
+\begin{DoxyCompactList}\small\item\em time used as a reference for the ramps in milliseconds \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_afe623d7c026a5249effb9f3385d2d5e7}{P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY} = 8330
+\begin{DoxyCompactList}\small\item\em Delay to the pulse on triac in microseconds. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_ade269c0a1b6d5e2fb47c7d00d0e5ec02}{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH} = 1
+\begin{DoxyCompactList}\small\item\em Width of the triac\textquotesingle{}s pulse in microseconds. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_a17baeab79c3b77b4b0aaec160e7e4756}{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+T\+H\+\_\+\+C\+O\+N\+ST} = 1000
+\begin{DoxyCompactList}\small\item\em Reference pulse width for the triac in microseconds. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_a90ea1da134a6ff1035820b608fa7e34d}{minimal\+\_\+delay} = 500
+\begin{DoxyCompactList}\small\item\em Minimal delay time to triac. \end{DoxyCompactList}\item 
+float \hyperlink{main_8c_abdc33cf25e725134a9b48e79c7031bcf}{delay}
+\begin{DoxyCompactList}\small\item\em It\textquotesingle{}s part of the process to determine the P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_a1ed0b32a193364f13b123cc611ffc950}{Ramp\+Up} = 1
+\begin{DoxyCompactList}\small\item\em Defines if it\textquotesingle{}s a acceleration or deceleration ramp. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_a9e31b8f6b1c8ca7a30a4ecdd47927d9a}{R\+PM}
+\begin{DoxyCompactList}\small\item\em Is the R\+PM of the motor. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_a617a47c70795bcff659815ad0efd2266}{counter}
+\begin{DoxyCompactList}\small\item\em The time variable responsible for the entire counting process. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_ab4135085df1fa4aa7f62be3ab69f9e4c}{Irms}
+\begin{DoxyCompactList}\small\item\em Is the current R\+MS. \end{DoxyCompactList}\item 
+float \hyperlink{main_8c_a4d9641adf03f70d5af29775241c990b5}{relation} = 1.\+4325
+\begin{DoxyCompactList}\small\item\em Is the relation between the 12 bits from the A\+DC and the current itself. It basically converts the voltage into current. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_acedab68ffe39b0ba7a173a4f57899d62}{corrente\+\_\+nominal} = 400
+\begin{DoxyCompactList}\small\item\em Is the nominal current of the motor. \end{DoxyCompactList}\item 
+int \hyperlink{main_8c_a5583ed1b97bf55ee34e978fc3f871534}{fg\+\_\+serial} = 0
+\begin{DoxyCompactList}\small\item\em Indicates if the soft shall start through the serial. \end{DoxyCompactList}\item 
+uint16\+\_\+t \hyperlink{main_8c_a6cfe7edb505cd29bb7e33a6f8c466c40}{adc\+\_\+current} \mbox{[}16\mbox{]}
+\begin{DoxyCompactList}\small\item\em Is a vector of reads from the A\+DC. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\+: Main program body 
+
+This notice applies to any and all portions of this file that are not between comment pairs U\+S\+ER C\+O\+DE B\+E\+G\+IN and U\+S\+ER C\+O\+DE E\+ND. Other portions of this file, whether inserted by the user or by software development tools are owned by their respective copyright owners.
+
+Copyright (c) 2018 S\+T\+Microelectronics International N.\+V. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted, provided that the following conditions are met\+:
+
+
+\begin{DoxyEnumerate}
+\item Redistribution of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+\item Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+\item Neither the name of S\+T\+Microelectronics nor the names of other contributors to this software may be used to endorse or promote products derived from this software without specific written permission.
+\item This software, including modifications and/or derivative works of this software, must execute solely and exclusively on microcontroller or microprocessor devices manufactured by or for S\+T\+Microelectronics.
+\item Redistribution and use of this software other than as permitted under this license is void and will automatically terminate your rights under this license.
+\end{DoxyEnumerate}
+
+T\+H\+IS S\+O\+F\+T\+W\+A\+RE IS P\+R\+O\+V\+I\+D\+ED BY S\+T\+M\+I\+C\+R\+O\+E\+L\+E\+C\+T\+R\+O\+N\+I\+CS A\+ND C\+O\+N\+T\+R\+I\+B\+U\+T\+O\+RS \char`\"{}\+A\+S I\+S\char`\"{} A\+ND A\+NY E\+X\+P\+R\+E\+SS, I\+M\+P\+L\+I\+ED OR S\+T\+A\+T\+U\+T\+O\+RY W\+A\+R\+R\+A\+N\+T\+I\+ES, I\+N\+C\+L\+U\+D\+I\+NG, B\+UT N\+OT L\+I\+M\+I\+T\+ED TO, T\+HE I\+M\+P\+L\+I\+ED W\+A\+R\+R\+A\+N\+T\+I\+ES OF M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY, F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE A\+ND N\+O\+N-\/\+I\+N\+F\+R\+I\+N\+G\+E\+M\+E\+NT OF T\+H\+I\+RD P\+A\+R\+TY I\+N\+T\+E\+L\+L\+E\+C\+T\+U\+AL P\+R\+O\+P\+E\+R\+TY R\+I\+G\+H\+TS A\+RE D\+I\+S\+C\+L\+A\+I\+M\+ED TO T\+HE F\+U\+L\+L\+E\+ST E\+X\+T\+E\+NT P\+E\+R\+M\+I\+T\+T\+ED BY L\+AW. IN NO E\+V\+E\+NT S\+H\+A\+LL S\+T\+M\+I\+C\+R\+O\+E\+L\+E\+C\+T\+R\+O\+N\+I\+CS OR C\+O\+N\+T\+R\+I\+B\+U\+T\+O\+RS BE L\+I\+A\+B\+LE F\+OR A\+NY D\+I\+R\+E\+CT, I\+N\+D\+I\+R\+E\+CT, I\+N\+C\+I\+D\+E\+N\+T\+AL, S\+P\+E\+C\+I\+AL, E\+X\+E\+M\+P\+L\+A\+RY, OR C\+O\+N\+S\+E\+Q\+U\+E\+N\+T\+I\+AL D\+A\+M\+A\+G\+ES (I\+N\+C\+L\+U\+D\+I\+NG, B\+UT N\+OT L\+I\+M\+I\+T\+ED TO, P\+R\+O\+C\+U\+R\+E\+M\+E\+NT OF S\+U\+B\+S\+T\+I\+T\+U\+TE G\+O\+O\+DS OR S\+E\+R\+V\+I\+C\+ES; L\+O\+SS OF U\+SE, D\+A\+TA, OR P\+R\+O\+F\+I\+TS; OR B\+U\+S\+I\+N\+E\+SS I\+N\+T\+E\+R\+R\+U\+P\+T\+I\+ON) H\+O\+W\+E\+V\+ER C\+A\+U\+S\+ED A\+ND ON A\+NY T\+H\+E\+O\+RY OF L\+I\+A\+B\+I\+L\+I\+TY, W\+H\+E\+T\+H\+ER IN C\+O\+N\+T\+R\+A\+CT, S\+T\+R\+I\+CT L\+I\+A\+B\+I\+L\+I\+TY, OR T\+O\+RT (I\+N\+C\+L\+U\+D\+I\+NG N\+E\+G\+L\+I\+G\+E\+N\+CE OR O\+T\+H\+E\+R\+W\+I\+SE) A\+R\+I\+S\+I\+NG IN A\+NY W\+AY O\+UT OF T\+HE U\+SE OF T\+H\+IS S\+O\+F\+T\+W\+A\+RE, E\+V\+EN IF A\+D\+V\+I\+S\+ED OF T\+HE P\+O\+S\+S\+I\+B\+I\+L\+I\+TY OF S\+U\+CH D\+A\+M\+A\+GE. 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{main_8c_a829116a51f1db1a72ebd1120f60719d5}\label{main_8c_a829116a51f1db1a72ebd1120f60719d5}} 
+\index{main.\+c@{main.\+c}!\+\_\+\+Error\+\_\+\+Handler@{\+\_\+\+Error\+\_\+\+Handler}}
+\index{\+\_\+\+Error\+\_\+\+Handler@{\+\_\+\+Error\+\_\+\+Handler}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{\+\_\+\+Error\+\_\+\+Handler()}{\_Error\_Handler()}}
+{\footnotesize\ttfamily void \+\_\+\+Error\+\_\+\+Handler (\begin{DoxyParamCaption}\item[{char $\ast$}]{file,  }\item[{int}]{line }\end{DoxyParamCaption})}
+
+
+
+This function is executed in case of error occurrence. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em file} & The file name as string. \\
+\hline
+{\em line} & The line in file as a number. \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em None} & \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 1010 of file main.\+c.
+
+
+
+Referenced by H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Msp\+Init(), and System\+Clock\+\_\+\+Config().
+
+\mbox{\Hypertarget{main_8c_a8fd7bb5cdeb9aa823f13806774d64842}\label{main_8c_a8fd7bb5cdeb9aa823f13806774d64842}} 
+\index{main.\+c@{main.\+c}!Comeca\+\_\+\+Task@{Comeca\+\_\+\+Task}}
+\index{Comeca\+\_\+\+Task@{Comeca\+\_\+\+Task}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Comeca\+\_\+\+Task()}{Comeca\_Task()}}
+{\footnotesize\ttfamily void Comeca\+\_\+\+Task (\begin{DoxyParamCaption}\item[{void const $\ast$}]{argument }\end{DoxyParamCaption})}
+
+
+
+Initialize all the peripherals and then lock the thread itself. 
+
+
+
+Definition at line 932 of file main.\+c.
+
+
+
+References adc\+\_\+current, Comeca\+Handle, counter, hadc1, htim1, htim2, htim3, huart2, P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY, P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH, tempo, and tempo\+\_\+up.
+
+\mbox{\Hypertarget{main_8c_a529e50368e7509729cdcb31ab2073ad1}\label{main_8c_a529e50368e7509729cdcb31ab2073ad1}} 
+\index{main.\+c@{main.\+c}!Counter\+Task@{Counter\+Task}}
+\index{Counter\+Task@{Counter\+Task}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Counter\+Task()}{CounterTask()}}
+{\footnotesize\ttfamily void Counter\+Task (\begin{DoxyParamCaption}\item[{void const $\ast$}]{argument }\end{DoxyParamCaption})}
+
+
+
+Verifies for the end of ramps and 150\% overcurrent protection. 
+
+
+
+Definition at line 696 of file main.\+c.
+
+
+
+References counter, delay, fg\+\_\+\+End, fg\+\_\+\+Start, minimal\+\_\+delay, P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY, P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH, P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+T\+H\+\_\+\+C\+O\+N\+ST, Ramp\+Up, and tempo.
+
+\mbox{\Hypertarget{main_8c_af20a88180db1113be1e89266917d148b}\label{main_8c_af20a88180db1113be1e89266917d148b}} 
+\index{main.\+c@{main.\+c}!H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Conv\+Cplt\+Callback@{H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Conv\+Cplt\+Callback}}
+\index{H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Conv\+Cplt\+Callback@{H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Conv\+Cplt\+Callback}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Conv\+Cplt\+Callback()}{HAL\_ADC\_ConvCpltCallback()}}
+{\footnotesize\ttfamily void H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Conv\+Cplt\+Callback (\begin{DoxyParamCaption}\item[{A\+D\+C\+\_\+\+Handle\+Type\+Def $\ast$}]{hadc }\end{DoxyParamCaption})}
+
+
+
+Is the callback from the D\+MA which stands for the end of conversion. 
+
+
+
+Definition at line 181 of file main.\+c.
+
+
+
+References fg\+\_\+\+A\+D\+C\+\_\+current.
+
+\mbox{\Hypertarget{main_8c_ae70bce6c39d0b570a7523b86738cec4b}\label{main_8c_ae70bce6c39d0b570a7523b86738cec4b}} 
+\index{main.\+c@{main.\+c}!H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Msp\+Post\+Init@{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Msp\+Post\+Init}}
+\index{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Msp\+Post\+Init@{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Msp\+Post\+Init}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Msp\+Post\+Init()}{HAL\_TIM\_MspPostInit()}}
+{\footnotesize\ttfamily void H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Msp\+Post\+Init (\begin{DoxyParamCaption}\item[{T\+I\+M\+\_\+\+Handle\+Type\+Def $\ast$}]{htim }\end{DoxyParamCaption})}
+
+T\+I\+M2 G\+P\+IO Configuration P\+A0-\/\+W\+K\+UP -\/-\/-\/---$>$ T\+I\+M2\+\_\+\+C\+H1
+
+Definition at line 257 of file stm32f4xx\+\_\+hal\+\_\+msp.\+c.
+
+\mbox{\Hypertarget{main_8c_a8a3b0ad512a6e6c6157440b68d395eac}\label{main_8c_a8a3b0ad512a6e6c6157440b68d395eac}} 
+\index{main.\+c@{main.\+c}!H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Period\+Elapsed\+Callback@{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Period\+Elapsed\+Callback}}
+\index{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Period\+Elapsed\+Callback@{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Period\+Elapsed\+Callback}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Period\+Elapsed\+Callback()}{HAL\_TIM\_PeriodElapsedCallback()}}
+{\footnotesize\ttfamily void H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+Period\+Elapsed\+Callback (\begin{DoxyParamCaption}\item[{T\+I\+M\+\_\+\+Handle\+Type\+Def $\ast$}]{htim }\end{DoxyParamCaption})}
+
+
+
+Period elapsed callback in non blocking mode. 
+
+\begin{DoxyNote}{Note}
+This function is called when T\+I\+M11 interrupt took place, inside H\+A\+L\+\_\+\+T\+I\+M\+\_\+\+I\+R\+Q\+Handler(). It makes a direct call to H\+A\+L\+\_\+\+Inc\+Tick() to increment a global variable \char`\"{}uw\+Tick\char`\"{} used as application time base. 
+\end{DoxyNote}
+
+\begin{DoxyParams}{Parameters}
+{\em htim} & \+: T\+IM handle \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em None} & \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 992 of file main.\+c.
+
+\mbox{\Hypertarget{main_8c_a840291bc02cba5474a4cb46a9b9566fe}\label{main_8c_a840291bc02cba5474a4cb46a9b9566fe}} 
+\index{main.\+c@{main.\+c}!main@{main}}
+\index{main@{main}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+
+
+The application entry point. 
+
+
+\begin{DoxyRetVals}{Return values}
+{\em None} & \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 191 of file main.\+c.
+
+
+
+References System\+Clock\+\_\+\+Config().
+
+\mbox{\Hypertarget{main_8c_a1f769319a61c9804941abb8dcff26535}\label{main_8c_a1f769319a61c9804941abb8dcff26535}} 
+\index{main.\+c@{main.\+c}!Over\+Current\+Task@{Over\+Current\+Task}}
+\index{Over\+Current\+Task@{Over\+Current\+Task}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Over\+Current\+Task()}{OverCurrentTask()}}
+{\footnotesize\ttfamily void Over\+Current\+Task (\begin{DoxyParamCaption}\item[{void const $\ast$}]{argument }\end{DoxyParamCaption})}
+
+
+
+Calculates the R\+MS current based on the A\+DC read. 
+
+
+
+Definition at line 878 of file main.\+c.
+
+
+
+References adc\+\_\+current, fg\+\_\+\+A\+D\+C\+\_\+current, Irms, and relation.
+
+\mbox{\Hypertarget{main_8c_a6d88ac71e23aaa96467829cc96a9e88b}\label{main_8c_a6d88ac71e23aaa96467829cc96a9e88b}} 
+\index{main.\+c@{main.\+c}!Ramp\+Task@{Ramp\+Task}}
+\index{Ramp\+Task@{Ramp\+Task}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Ramp\+Task()}{RampTask()}}
+{\footnotesize\ttfamily void Ramp\+Task (\begin{DoxyParamCaption}\item[{void const $\ast$}]{argument }\end{DoxyParamCaption})}
+
+
+
+Counts up or down depending on the settings. 
+
+
+
+Definition at line 625 of file main.\+c.
+
+
+
+References htim2, P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY, and P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH.
+
+\mbox{\Hypertarget{main_8c_a1534f05dcb26dfde99ea71444cc05666}\label{main_8c_a1534f05dcb26dfde99ea71444cc05666}} 
+\index{main.\+c@{main.\+c}!R\+P\+M\+Task@{R\+P\+M\+Task}}
+\index{R\+P\+M\+Task@{R\+P\+M\+Task}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{R\+P\+M\+Task()}{RPMTask()}}
+{\footnotesize\ttfamily void R\+P\+M\+Task (\begin{DoxyParamCaption}\item[{void const $\ast$}]{argument }\end{DoxyParamCaption})}
+
+
+
+Measure and calculates the R\+PM. 
+
+
+
+Definition at line 965 of file main.\+c.
+
+
+
+References htim1, and R\+PM.
+
+\mbox{\Hypertarget{main_8c_a6bf060e07d44c06e14cfa4a3cc1171fb}\label{main_8c_a6bf060e07d44c06e14cfa4a3cc1171fb}} 
+\index{main.\+c@{main.\+c}!Serial\+Task@{Serial\+Task}}
+\index{Serial\+Task@{Serial\+Task}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Serial\+Task()}{SerialTask()}}
+{\footnotesize\ttfamily void Serial\+Task (\begin{DoxyParamCaption}\item[{void const $\ast$}]{argument }\end{DoxyParamCaption})}
+
+
+
+Responsable for the serial stuff. 
+
+
+
+Definition at line 741 of file main.\+c.
+
+
+
+References corrente\+\_\+nominal, fg\+\_\+serial, huart2, Irms, relation, R\+PM, tempo\+\_\+down, and tempo\+\_\+up.
+
+\mbox{\Hypertarget{main_8c_a70af21c671abfcc773614a9a4f63d920}\label{main_8c_a70af21c671abfcc773614a9a4f63d920}} 
+\index{main.\+c@{main.\+c}!System\+Clock\+\_\+\+Config@{System\+Clock\+\_\+\+Config}}
+\index{System\+Clock\+\_\+\+Config@{System\+Clock\+\_\+\+Config}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{System\+Clock\+\_\+\+Config()}{SystemClock\_Config()}}
+{\footnotesize\ttfamily void System\+Clock\+\_\+\+Config (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+
+
+System Clock Configuration. 
+
+
+\begin{DoxyRetVals}{Return values}
+{\em None} & \\
+\hline
+\end{DoxyRetVals}
+Configure the main internal regulator output voltage
+
+Initializes the C\+PU, A\+HB and A\+PB busses clocks
+
+Initializes the C\+PU, A\+HB and A\+PB busses clocks
+
+Configure the Systick interrupt time
+
+Configure the Systick
+
+Definition at line 296 of file main.\+c.
+
+
+
+References \+\_\+\+Error\+\_\+\+Handler().
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{main_8c_aa7001a59cf7cf23af4e72b0c24dfbd72}\label{main_8c_aa7001a59cf7cf23af4e72b0c24dfbd72}} 
+\index{main.\+c@{main.\+c}!Verify\+Task@{Verify\+Task}}
+\index{Verify\+Task@{Verify\+Task}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Verify\+Task()}{VerifyTask()}}
+{\footnotesize\ttfamily void Verify\+Task (\begin{DoxyParamCaption}\item[{void const $\ast$}]{argument }\end{DoxyParamCaption})}
+
+
+
+Monitors the current percentage and if the board button is pressed. 
+
+
+
+Definition at line 641 of file main.\+c.
+
+
+
+References corrente\+\_\+nominal, counter, fg\+\_\+\+End, fg\+\_\+serial, fg\+\_\+\+Start, Irms, P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY, P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH, Ramp\+Up, tempo, tempo\+\_\+down, and tempo\+\_\+up.
+
+
+
+\subsection{Variable Documentation}
+\mbox{\Hypertarget{main_8c_a6cfe7edb505cd29bb7e33a6f8c466c40}\label{main_8c_a6cfe7edb505cd29bb7e33a6f8c466c40}} 
+\index{main.\+c@{main.\+c}!adc\+\_\+current@{adc\+\_\+current}}
+\index{adc\+\_\+current@{adc\+\_\+current}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{adc\+\_\+current}{adc\_current}}
+{\footnotesize\ttfamily uint16\+\_\+t adc\+\_\+current\mbox{[}16\mbox{]}}
+
+
+
+Is a vector of reads from the A\+DC. 
+
+
+
+Definition at line 174 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task(), and Over\+Current\+Task().
+
+\mbox{\Hypertarget{main_8c_a910854a76b4b2c3f4d70530b64c29d46}\label{main_8c_a910854a76b4b2c3f4d70530b64c29d46}} 
+\index{main.\+c@{main.\+c}!Comeca\+Handle@{Comeca\+Handle}}
+\index{Comeca\+Handle@{Comeca\+Handle}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Comeca\+Handle}{ComecaHandle}}
+{\footnotesize\ttfamily os\+Thread\+Id Comeca\+Handle}
+
+
+
+Definition at line 75 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task().
+
+\mbox{\Hypertarget{main_8c_acedab68ffe39b0ba7a173a4f57899d62}\label{main_8c_acedab68ffe39b0ba7a173a4f57899d62}} 
+\index{main.\+c@{main.\+c}!corrente\+\_\+nominal@{corrente\+\_\+nominal}}
+\index{corrente\+\_\+nominal@{corrente\+\_\+nominal}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{corrente\+\_\+nominal}{corrente\_nominal}}
+{\footnotesize\ttfamily int corrente\+\_\+nominal = 400}
+
+
+
+Is the nominal current of the motor. 
+
+
+
+Definition at line 168 of file main.\+c.
+
+
+
+Referenced by Serial\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a617a47c70795bcff659815ad0efd2266}\label{main_8c_a617a47c70795bcff659815ad0efd2266}} 
+\index{main.\+c@{main.\+c}!counter@{counter}}
+\index{counter@{counter}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{counter}{counter}}
+{\footnotesize\ttfamily int counter}
+
+
+
+The time variable responsible for the entire counting process. 
+
+
+
+Definition at line 159 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task(), Counter\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a842e258169c5c1f6073ef4c3dd464fd2}\label{main_8c_a842e258169c5c1f6073ef4c3dd464fd2}} 
+\index{main.\+c@{main.\+c}!Counter\+Handle@{Counter\+Handle}}
+\index{Counter\+Handle@{Counter\+Handle}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Counter\+Handle}{CounterHandle}}
+{\footnotesize\ttfamily os\+Thread\+Id Counter\+Handle}
+
+
+
+Definition at line 72 of file main.\+c.
+
+\mbox{\Hypertarget{main_8c_abdc33cf25e725134a9b48e79c7031bcf}\label{main_8c_abdc33cf25e725134a9b48e79c7031bcf}} 
+\index{main.\+c@{main.\+c}!delay@{delay}}
+\index{delay@{delay}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{delay}{delay}}
+{\footnotesize\ttfamily float delay}
+
+
+
+It\textquotesingle{}s part of the process to determine the P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY. 
+
+
+
+Definition at line 150 of file main.\+c.
+
+
+
+Referenced by Counter\+Task().
+
+\mbox{\Hypertarget{main_8c_a12c02b79a5954981fbd4ab4eda282b53}\label{main_8c_a12c02b79a5954981fbd4ab4eda282b53}} 
+\index{main.\+c@{main.\+c}!fg\+\_\+\+A\+D\+C\+\_\+current@{fg\+\_\+\+A\+D\+C\+\_\+current}}
+\index{fg\+\_\+\+A\+D\+C\+\_\+current@{fg\+\_\+\+A\+D\+C\+\_\+current}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{fg\+\_\+\+A\+D\+C\+\_\+current}{fg\_ADC\_current}}
+{\footnotesize\ttfamily char fg\+\_\+\+A\+D\+C\+\_\+current = 0}
+
+
+
+Indicates if the A\+DC conversion is over. 
+
+
+
+Definition at line 126 of file main.\+c.
+
+
+
+Referenced by H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Conv\+Cplt\+Callback(), and Over\+Current\+Task().
+
+\mbox{\Hypertarget{main_8c_a66443e92f65cd5357a66fed30bb12e07}\label{main_8c_a66443e92f65cd5357a66fed30bb12e07}} 
+\index{main.\+c@{main.\+c}!fg\+\_\+\+End@{fg\+\_\+\+End}}
+\index{fg\+\_\+\+End@{fg\+\_\+\+End}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{fg\+\_\+\+End}{fg\_End}}
+{\footnotesize\ttfamily char fg\+\_\+\+End = 1}
+
+
+
+Shows if the soft is idle. 
+
+
+
+Definition at line 123 of file main.\+c.
+
+
+
+Referenced by Counter\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a5583ed1b97bf55ee34e978fc3f871534}\label{main_8c_a5583ed1b97bf55ee34e978fc3f871534}} 
+\index{main.\+c@{main.\+c}!fg\+\_\+serial@{fg\+\_\+serial}}
+\index{fg\+\_\+serial@{fg\+\_\+serial}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{fg\+\_\+serial}{fg\_serial}}
+{\footnotesize\ttfamily int fg\+\_\+serial = 0}
+
+
+
+Indicates if the soft shall start through the serial. 
+
+
+
+Definition at line 171 of file main.\+c.
+
+
+
+Referenced by Serial\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a05742093ba179b8511cce51661298f5e}\label{main_8c_a05742093ba179b8511cce51661298f5e}} 
+\index{main.\+c@{main.\+c}!fg\+\_\+\+Start@{fg\+\_\+\+Start}}
+\index{fg\+\_\+\+Start@{fg\+\_\+\+Start}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{fg\+\_\+\+Start}{fg\_Start}}
+{\footnotesize\ttfamily char fg\+\_\+\+Start = 0}
+
+
+
+If it\textquotesingle{}s on the soft is in a ramp. 
+
+
+
+Definition at line 120 of file main.\+c.
+
+
+
+Referenced by Counter\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a22b804736f5648d52f639b2647d4ed13}\label{main_8c_a22b804736f5648d52f639b2647d4ed13}} 
+\index{main.\+c@{main.\+c}!hadc1@{hadc1}}
+\index{hadc1@{hadc1}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{hadc1}{hadc1}}
+{\footnotesize\ttfamily A\+D\+C\+\_\+\+Handle\+Type\+Def hadc1}
+
+
+
+Definition at line 60 of file main.\+c.
+
+
+
+Referenced by A\+D\+C\+\_\+\+I\+R\+Q\+Handler(), and Comeca\+\_\+\+Task().
+
+\mbox{\Hypertarget{main_8c_a1c126854bb1813d31ab4776b21dcc51f}\label{main_8c_a1c126854bb1813d31ab4776b21dcc51f}} 
+\index{main.\+c@{main.\+c}!hdma\+\_\+adc1@{hdma\+\_\+adc1}}
+\index{hdma\+\_\+adc1@{hdma\+\_\+adc1}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{hdma\+\_\+adc1}{hdma\_adc1}}
+{\footnotesize\ttfamily D\+M\+A\+\_\+\+Handle\+Type\+Def hdma\+\_\+adc1}
+
+File Name \+: \hyperlink{stm32f4xx__hal__msp_8c}{stm32f4xx\+\_\+hal\+\_\+msp.\+c} Description \+: This file provides code for the M\+SP Initialization and de-\/\+Initialization codes.
+
+This notice applies to any and all portions of this file that are not between comment pairs U\+S\+ER C\+O\+DE B\+E\+G\+IN and U\+S\+ER C\+O\+DE E\+ND. Other portions of this file, whether inserted by the user or by software development tools are owned by their respective copyright owners.
+
+Copyright (c) 2018 S\+T\+Microelectronics International N.\+V. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted, provided that the following conditions are met\+:
+
+
+\begin{DoxyEnumerate}
+\item Redistribution of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+\item Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+\item Neither the name of S\+T\+Microelectronics nor the names of other contributors to this software may be used to endorse or promote products derived from this software without specific written permission.
+\item This software, including modifications and/or derivative works of this software, must execute solely and exclusively on microcontroller or microprocessor devices manufactured by or for S\+T\+Microelectronics.
+\item Redistribution and use of this software other than as permitted under this license is void and will automatically terminate your rights under this license.
+\end{DoxyEnumerate}
+
+T\+H\+IS S\+O\+F\+T\+W\+A\+RE IS P\+R\+O\+V\+I\+D\+ED BY S\+T\+M\+I\+C\+R\+O\+E\+L\+E\+C\+T\+R\+O\+N\+I\+CS A\+ND C\+O\+N\+T\+R\+I\+B\+U\+T\+O\+RS \char`\"{}\+A\+S I\+S\char`\"{} A\+ND A\+NY E\+X\+P\+R\+E\+SS, I\+M\+P\+L\+I\+ED OR S\+T\+A\+T\+U\+T\+O\+RY W\+A\+R\+R\+A\+N\+T\+I\+ES, I\+N\+C\+L\+U\+D\+I\+NG, B\+UT N\+OT L\+I\+M\+I\+T\+ED TO, T\+HE I\+M\+P\+L\+I\+ED W\+A\+R\+R\+A\+N\+T\+I\+ES OF M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY, F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE A\+ND N\+O\+N-\/\+I\+N\+F\+R\+I\+N\+G\+E\+M\+E\+NT OF T\+H\+I\+RD P\+A\+R\+TY I\+N\+T\+E\+L\+L\+E\+C\+T\+U\+AL P\+R\+O\+P\+E\+R\+TY R\+I\+G\+H\+TS A\+RE D\+I\+S\+C\+L\+A\+I\+M\+ED TO T\+HE F\+U\+L\+L\+E\+ST E\+X\+T\+E\+NT P\+E\+R\+M\+I\+T\+T\+ED BY L\+AW. IN NO E\+V\+E\+NT S\+H\+A\+LL S\+T\+M\+I\+C\+R\+O\+E\+L\+E\+C\+T\+R\+O\+N\+I\+CS OR C\+O\+N\+T\+R\+I\+B\+U\+T\+O\+RS BE L\+I\+A\+B\+LE F\+OR A\+NY D\+I\+R\+E\+CT, I\+N\+D\+I\+R\+E\+CT, I\+N\+C\+I\+D\+E\+N\+T\+AL, S\+P\+E\+C\+I\+AL, E\+X\+E\+M\+P\+L\+A\+RY, OR C\+O\+N\+S\+E\+Q\+U\+E\+N\+T\+I\+AL D\+A\+M\+A\+G\+ES (I\+N\+C\+L\+U\+D\+I\+NG, B\+UT N\+OT L\+I\+M\+I\+T\+ED TO, P\+R\+O\+C\+U\+R\+E\+M\+E\+NT OF S\+U\+B\+S\+T\+I\+T\+U\+TE G\+O\+O\+DS OR S\+E\+R\+V\+I\+C\+ES; L\+O\+SS OF U\+SE, D\+A\+TA, OR P\+R\+O\+F\+I\+TS; OR B\+U\+S\+I\+N\+E\+SS I\+N\+T\+E\+R\+R\+U\+P\+T\+I\+ON) H\+O\+W\+E\+V\+ER C\+A\+U\+S\+ED A\+ND ON A\+NY T\+H\+E\+O\+RY OF L\+I\+A\+B\+I\+L\+I\+TY, W\+H\+E\+T\+H\+ER IN C\+O\+N\+T\+R\+A\+CT, S\+T\+R\+I\+CT L\+I\+A\+B\+I\+L\+I\+TY, OR T\+O\+RT (I\+N\+C\+L\+U\+D\+I\+NG N\+E\+G\+L\+I\+G\+E\+N\+CE OR O\+T\+H\+E\+R\+W\+I\+SE) A\+R\+I\+S\+I\+NG IN A\+NY W\+AY O\+UT OF T\+HE U\+SE OF T\+H\+IS S\+O\+F\+T\+W\+A\+RE, E\+V\+EN IF A\+D\+V\+I\+S\+ED OF T\+HE P\+O\+S\+S\+I\+B\+I\+L\+I\+TY OF S\+U\+CH D\+A\+M\+A\+GE. 
+
+Definition at line 61 of file main.\+c.
+
+
+
+Referenced by D\+M\+A2\+\_\+\+Stream0\+\_\+\+I\+R\+Q\+Handler(), and H\+A\+L\+\_\+\+A\+D\+C\+\_\+\+Msp\+Init().
+
+\mbox{\Hypertarget{main_8c_a25fc663547539bc49fecc0011bd76ab5}\label{main_8c_a25fc663547539bc49fecc0011bd76ab5}} 
+\index{main.\+c@{main.\+c}!htim1@{htim1}}
+\index{htim1@{htim1}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{htim1}{htim1}}
+{\footnotesize\ttfamily T\+I\+M\+\_\+\+Handle\+Type\+Def htim1}
+
+
+
+Definition at line 63 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task(), R\+P\+M\+Task(), and T\+I\+M1\+\_\+\+T\+R\+G\+\_\+\+C\+O\+M\+\_\+\+T\+I\+M11\+\_\+\+I\+R\+Q\+Handler().
+
+\mbox{\Hypertarget{main_8c_a2c80fd5510e2990a59a5c90d745c716c}\label{main_8c_a2c80fd5510e2990a59a5c90d745c716c}} 
+\index{main.\+c@{main.\+c}!htim2@{htim2}}
+\index{htim2@{htim2}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{htim2}{htim2}}
+{\footnotesize\ttfamily T\+I\+M\+\_\+\+Handle\+Type\+Def htim2}
+
+
+
+Definition at line 64 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task(), Ramp\+Task(), and T\+I\+M2\+\_\+\+I\+R\+Q\+Handler().
+
+\mbox{\Hypertarget{main_8c_aac3d2c59ee0e3bbae1b99529a154eb62}\label{main_8c_aac3d2c59ee0e3bbae1b99529a154eb62}} 
+\index{main.\+c@{main.\+c}!htim3@{htim3}}
+\index{htim3@{htim3}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{htim3}{htim3}}
+{\footnotesize\ttfamily T\+I\+M\+\_\+\+Handle\+Type\+Def htim3}
+
+
+
+Definition at line 65 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task().
+
+\mbox{\Hypertarget{main_8c_a85788cec5a97ee377e4ee2e74f026484}\label{main_8c_a85788cec5a97ee377e4ee2e74f026484}} 
+\index{main.\+c@{main.\+c}!htim4@{htim4}}
+\index{htim4@{htim4}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{htim4}{htim4}}
+{\footnotesize\ttfamily T\+I\+M\+\_\+\+Handle\+Type\+Def htim4}
+
+
+
+Definition at line 66 of file main.\+c.
+
+\mbox{\Hypertarget{main_8c_aa9479c261d65eecedd3d9582f7f0f89c}\label{main_8c_aa9479c261d65eecedd3d9582f7f0f89c}} 
+\index{main.\+c@{main.\+c}!huart2@{huart2}}
+\index{huart2@{huart2}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{huart2}{huart2}}
+{\footnotesize\ttfamily U\+A\+R\+T\+\_\+\+Handle\+Type\+Def huart2}
+
+
+
+Definition at line 68 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task(), Serial\+Task(), and U\+S\+A\+R\+T2\+\_\+\+I\+R\+Q\+Handler().
+
+\mbox{\Hypertarget{main_8c_ab4135085df1fa4aa7f62be3ab69f9e4c}\label{main_8c_ab4135085df1fa4aa7f62be3ab69f9e4c}} 
+\index{main.\+c@{main.\+c}!Irms@{Irms}}
+\index{Irms@{Irms}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Irms}{Irms}}
+{\footnotesize\ttfamily int Irms}
+
+
+
+Is the current R\+MS. 
+
+
+
+Definition at line 162 of file main.\+c.
+
+
+
+Referenced by Over\+Current\+Task(), Serial\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a90ea1da134a6ff1035820b608fa7e34d}\label{main_8c_a90ea1da134a6ff1035820b608fa7e34d}} 
+\index{main.\+c@{main.\+c}!minimal\+\_\+delay@{minimal\+\_\+delay}}
+\index{minimal\+\_\+delay@{minimal\+\_\+delay}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{minimal\+\_\+delay}{minimal\_delay}}
+{\footnotesize\ttfamily int minimal\+\_\+delay = 500}
+
+
+
+Minimal delay time to triac. 
+
+
+
+Definition at line 147 of file main.\+c.
+
+
+
+Referenced by Counter\+Task().
+
+\mbox{\Hypertarget{main_8c_a686e1ac95d7b0ced8877029cbbdb78b7}\label{main_8c_a686e1ac95d7b0ced8877029cbbdb78b7}} 
+\index{main.\+c@{main.\+c}!Over\+Current\+Handle@{Over\+Current\+Handle}}
+\index{Over\+Current\+Handle@{Over\+Current\+Handle}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Over\+Current\+Handle}{OverCurrentHandle}}
+{\footnotesize\ttfamily os\+Thread\+Id Over\+Current\+Handle}
+
+
+
+Definition at line 74 of file main.\+c.
+
+\mbox{\Hypertarget{main_8c_afe623d7c026a5249effb9f3385d2d5e7}\label{main_8c_afe623d7c026a5249effb9f3385d2d5e7}} 
+\index{main.\+c@{main.\+c}!P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY@{P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY}}
+\index{P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY@{P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY}{PULSE\_DELAY}}
+{\footnotesize\ttfamily int P\+U\+L\+S\+E\+\_\+\+D\+E\+L\+AY = 8330}
+
+
+
+Delay to the pulse on triac in microseconds. 
+
+
+
+Definition at line 138 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task(), Counter\+Task(), Ramp\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_ade269c0a1b6d5e2fb47c7d00d0e5ec02}\label{main_8c_ade269c0a1b6d5e2fb47c7d00d0e5ec02}} 
+\index{main.\+c@{main.\+c}!P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH@{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH}}
+\index{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH@{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH}{PULSE\_WIDTH}}
+{\footnotesize\ttfamily int P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+TH = 1}
+
+
+
+Width of the triac\textquotesingle{}s pulse in microseconds. 
+
+
+
+Definition at line 141 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task(), Counter\+Task(), Ramp\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a17baeab79c3b77b4b0aaec160e7e4756}\label{main_8c_a17baeab79c3b77b4b0aaec160e7e4756}} 
+\index{main.\+c@{main.\+c}!P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+T\+H\+\_\+\+C\+O\+N\+ST@{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+T\+H\+\_\+\+C\+O\+N\+ST}}
+\index{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+T\+H\+\_\+\+C\+O\+N\+ST@{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+T\+H\+\_\+\+C\+O\+N\+ST}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+T\+H\+\_\+\+C\+O\+N\+ST}{PULSE\_WIDTH\_CONST}}
+{\footnotesize\ttfamily int P\+U\+L\+S\+E\+\_\+\+W\+I\+D\+T\+H\+\_\+\+C\+O\+N\+ST = 1000}
+
+
+
+Reference pulse width for the triac in microseconds. 
+
+
+
+Definition at line 144 of file main.\+c.
+
+
+
+Referenced by Counter\+Task().
+
+\mbox{\Hypertarget{main_8c_a4e43b4769e9b30bec05861fab0d8e7f4}\label{main_8c_a4e43b4769e9b30bec05861fab0d8e7f4}} 
+\index{main.\+c@{main.\+c}!Ramp\+Handle@{Ramp\+Handle}}
+\index{Ramp\+Handle@{Ramp\+Handle}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Ramp\+Handle}{RampHandle}}
+{\footnotesize\ttfamily os\+Thread\+Id Ramp\+Handle}
+
+
+
+Definition at line 70 of file main.\+c.
+
+\mbox{\Hypertarget{main_8c_a1ed0b32a193364f13b123cc611ffc950}\label{main_8c_a1ed0b32a193364f13b123cc611ffc950}} 
+\index{main.\+c@{main.\+c}!Ramp\+Up@{Ramp\+Up}}
+\index{Ramp\+Up@{Ramp\+Up}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Ramp\+Up}{RampUp}}
+{\footnotesize\ttfamily int Ramp\+Up = 1}
+
+
+
+Defines if it\textquotesingle{}s a acceleration or deceleration ramp. 
+
+
+
+Definition at line 153 of file main.\+c.
+
+
+
+Referenced by Counter\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a4d9641adf03f70d5af29775241c990b5}\label{main_8c_a4d9641adf03f70d5af29775241c990b5}} 
+\index{main.\+c@{main.\+c}!relation@{relation}}
+\index{relation@{relation}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{relation}{relation}}
+{\footnotesize\ttfamily float relation = 1.\+4325}
+
+
+
+Is the relation between the 12 bits from the A\+DC and the current itself. It basically converts the voltage into current. 
+
+
+
+Definition at line 165 of file main.\+c.
+
+
+
+Referenced by Over\+Current\+Task(), and Serial\+Task().
+
+\mbox{\Hypertarget{main_8c_a9e31b8f6b1c8ca7a30a4ecdd47927d9a}\label{main_8c_a9e31b8f6b1c8ca7a30a4ecdd47927d9a}} 
+\index{main.\+c@{main.\+c}!R\+PM@{R\+PM}}
+\index{R\+PM@{R\+PM}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{R\+PM}{RPM}}
+{\footnotesize\ttfamily int R\+PM}
+
+
+
+Is the R\+PM of the motor. 
+
+
+
+Definition at line 156 of file main.\+c.
+
+
+
+Referenced by R\+P\+M\+Task(), and Serial\+Task().
+
+\mbox{\Hypertarget{main_8c_ae1f09b8797189483f1f36d0037e1edd5}\label{main_8c_ae1f09b8797189483f1f36d0037e1edd5}} 
+\index{main.\+c@{main.\+c}!R\+P\+M\+Handle@{R\+P\+M\+Handle}}
+\index{R\+P\+M\+Handle@{R\+P\+M\+Handle}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{R\+P\+M\+Handle}{RPMHandle}}
+{\footnotesize\ttfamily os\+Thread\+Id R\+P\+M\+Handle}
+
+
+
+Definition at line 76 of file main.\+c.
+
+\mbox{\Hypertarget{main_8c_a51f37ff73ffafa183e194d541caeda45}\label{main_8c_a51f37ff73ffafa183e194d541caeda45}} 
+\index{main.\+c@{main.\+c}!Serial\+Handle@{Serial\+Handle}}
+\index{Serial\+Handle@{Serial\+Handle}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Serial\+Handle}{SerialHandle}}
+{\footnotesize\ttfamily os\+Thread\+Id Serial\+Handle}
+
+
+
+Definition at line 73 of file main.\+c.
+
+\mbox{\Hypertarget{main_8c_a15448d4a27a20e04e8ba36b18593f069}\label{main_8c_a15448d4a27a20e04e8ba36b18593f069}} 
+\index{main.\+c@{main.\+c}!tempo@{tempo}}
+\index{tempo@{tempo}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{tempo}{tempo}}
+{\footnotesize\ttfamily float tempo}
+
+
+
+time used as a reference for the ramps in milliseconds 
+
+
+
+Definition at line 135 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task(), Counter\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a7e76dc387d3dd0f9f1073153977cf10f}\label{main_8c_a7e76dc387d3dd0f9f1073153977cf10f}} 
+\index{main.\+c@{main.\+c}!tempo\+\_\+down@{tempo\+\_\+down}}
+\index{tempo\+\_\+down@{tempo\+\_\+down}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{tempo\+\_\+down}{tempo\_down}}
+{\footnotesize\ttfamily int tempo\+\_\+down = 7000}
+
+
+
+Deceleration time in milliseconds. 
+
+
+
+Definition at line 132 of file main.\+c.
+
+
+
+Referenced by Serial\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a9621e5934d376c255ddb0244320139ff}\label{main_8c_a9621e5934d376c255ddb0244320139ff}} 
+\index{main.\+c@{main.\+c}!tempo\+\_\+up@{tempo\+\_\+up}}
+\index{tempo\+\_\+up@{tempo\+\_\+up}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{tempo\+\_\+up}{tempo\_up}}
+{\footnotesize\ttfamily int tempo\+\_\+up = 10000}
+
+
+
+Is the acceleration time in milliseconds. 
+
+
+
+Definition at line 129 of file main.\+c.
+
+
+
+Referenced by Comeca\+\_\+\+Task(), Serial\+Task(), and Verify\+Task().
+
+\mbox{\Hypertarget{main_8c_a3f95c9df4c6f22b51be355e0ffb86071}\label{main_8c_a3f95c9df4c6f22b51be355e0ffb86071}} 
+\index{main.\+c@{main.\+c}!Verify\+Handle@{Verify\+Handle}}
+\index{Verify\+Handle@{Verify\+Handle}!main.\+c@{main.\+c}}
+\subsubsection{\texorpdfstring{Verify\+Handle}{VerifyHandle}}
+{\footnotesize\ttfamily os\+Thread\+Id Verify\+Handle}
+
+
+
+Definition at line 71 of file main.\+c.
+
